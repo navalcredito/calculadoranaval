@@ -27,7 +27,11 @@
     .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
     .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     .brand { display: flex; align-items: center; gap: 12px; }
-    .brand .logo { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+    .logo {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      background-size: cover; background-position: center; background-repeat: no-repeat;
+    }
     .brand h1 { font-size: 20px; margin: 0; }
     .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius); padding: 16px; }
     .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; }
@@ -43,19 +47,30 @@
     button { cursor: pointer; border-radius: 12px; padding: 10px 14px; font-weight: 600; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.08); color: var(--text); }
     button.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; color: #fff; }
     .help { color: var(--muted); font-size: 12px; }
+
+    /* Card de Resumo com texto maior para leitura rápida */
+    #resumoFin {
+      font-size: 14px; line-height: 1.5; color: var(--text);
+      background: rgba(255,255,255,0.02);
+      border: 1px dashed rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 6px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
       <div class="brand">
-        <div class="logo"></div>
+        <div class="logo" id="logoBox"></div>
         <h1>NX Boats • Simulador de Financiamento</h1>
       </div>
       <div class="help">SP Boat Show 2025</div>
     </div>
 
     <div class="grid">
+      <!-- Parâmetros -->
       <div class="card">
         <h2>Parâmetros</h2>
         <label>Valor da Lancha (R$)</label>
@@ -78,6 +93,7 @@
         </select>
       </div>
 
+      <!-- Resultados -->
       <div class="card">
         <h2>Resultados</h2>
         <div><label>Valor entrada (R$)</label><input id="valorEntrada" readonly /></div>
@@ -88,7 +104,12 @@
         <div><label>Valor Subsidiado (R$)</label><input id="valorSubsidiado" readonly /></div>
         <div><label>Valor Financiado líquido de Equalização (R$)</label><div id="valorLiquido">R$ 0,00</div></div>
         <div><label>Valor Total Recebido (R$)</label><div id="valorTotalRecebido">R$ 0,00</div></div>
-        <p id="resumoFin" class="help" style="margin-top:8px;">Preencha os campos para ver o resumo do financiamento.</p>
+      </div>
+
+      <!-- Resumo -->
+      <div class="card" style="grid-column: 1 / -1;">
+        <h2>Resumo</h2>
+        <div id="resumoFin" class="help">Preencha os campos para ver o resumo do financiamento.</div>
       </div>
     </div>
 
@@ -99,17 +120,86 @@
   </div>
 
   <script>
-// === TABELA (extraída da planilha CalcSPBS.xlsx) ===
-const TABLE = {"0.00":{"6":{"equalizacao":0.06611304500173112,"fator":0.16910615058904058},"10":{"equalizacao":0.10127134048048324,"fator":0.10200795336170877},"12":{"equalizacao":0.11818009223127306,"fator":0.08523760885701502},"15":{"equalizacao":0.1427412267352882,"fator":0.06839363110163799},"18":{"equalizacao":0.1663766104598558,"fator":0.057107444276325726},"20":{"equalizacao":0.18163857226763812,"fator":0.051446999391783074},"24":{"equalizacao":0.21102583694675215,"fator":0.04293587266432932},"30":{"equalizacao":0.2524235284614596,"fator":0.03439933933039835},"36":{"equalizacao":0.29083813217125515,"fator":0.02869316496607458},"40":{"equalizacao":0.3149115455777799,"fator":0.025835737447969787},"42":{"equalizacao":0.3265138171864584,"fator":0.02461070499480921}},"0.99":{"6":{"equalizacao":0.03348788256717861,"fator":0.1750137745886824},"10":{"equalizacao":0.05161320568513417,"fator":0.10764357891368887},"12":{"equalizacao":0.06040967544692319,"fator":0.09082218339862316},"15":{"equalizacao":0.0732862428572402,"fator":0.07393486972350302},"18":{"equalizacao":0.0857871719987129,"fator":0.06262767012969577},"20":{"equalizacao":0.09391835753570825,"fator":0.05696246610667561},"24":{"equalizacao":0.10970691754315026,"fator":0.048448920093051804},"30":{"equalizacao":0.13225437833473225,"fator":0.03992771977593361},"36":{"equalizacao":0.15350681133307672,"fator":0.03424892160261171},"40":{"equalizacao":0.1661537701247666,"fator":0.031475912938705665},"42":{"equalizacao":0.17175965979880345,"fator":0.030343479911329063}},"1.39":{"6":{"equalizacao":0.02077057443304039,"fator":0.17795136387726796},"10":{"equalizacao":0.03229666518769003,"fator":0.11051066472983299},"12":{"equalizacao":0.036492245551989784,"fator":0.0931340701034643},"15":{"equalizacao":0.04434577201811202,"fator":0.07624420487518073},"18":{"equalizacao":0.05199562356921143,"fator":0.0649429630532005},"20":{"equalizacao":0.05698449444308464,"fator":0.059283793210310585},"24":{"equalizacao":0.06670135718414054,"fator":0.05078982169666088},"30":{"equalizacao":0.08064292755850571,"fator":0.04230309227241533},"36":{"equalizacao":0.09385278176771486,"fator":0.03666274079112079},"40":{"equalizacao":0.1022684220085158,"fator":0.03385535921746679},"42":{"equalizacao":0.10636244066443416,"fator":0.03265480522940528}},"1.99":{"6":{"equalizacao":0.0,"fator":0.18107802829172366},"10":{"equalizacao":0.0,"fator":0.113503326988245},"12":{"equalizacao":0.0,"fator":0.09666116398799687},"15":{"equalizacao":0.0,"fator":0.0797819160362527},"18":{"equalizacao":0.0,"fator":0.06850519780444108},"20":{"equalizacao":0.0,"fator":0.06286604422974184},"24":{"equalizacao":0.0,"fator":0.054420214978478426},"30":{"equalizacao":0.0,"fator":0.04601371619444646},"36":{"equalizacao":0.0,"fator":0.04045982959209824},"40":{"equalizacao":0.0,"fator":0.03771172099625028},"42":{"equalizacao":0.0,"fator":0.036541514334855115}}};
+// ===== CONFIGURAÇÃO DA LOGO (substitua pela URL da sua PNG) =====
+const LOGO_URL = 'https://i.imgur.com/9D2KFZo.png'; // ex.: 'https://seu-dominio.com/logo.png'
+
+// === TABELA (Taxa -> Prazo -> { equalizacao (fração 0..1), fator }) ===
+// Equalização convertida da tabela (% -> fração). Fatores exatamente como enviados.
+const TABLE = {
+  "0.00": {
+    "6":  { equalizacao: 0.0661130450017311,  fator: 0.169106 },
+    "10": { equalizacao: 0.101271340480483,   fator: 0.102008 },
+    "12": { equalizacao: 0.118180092231273,   fator: 0.085238 },
+    "15": { equalizacao: 0.142741226735288,   fator: 0.068394 },
+    "18": { equalizacao: 0.166376610459856,   fator: 0.057107 },
+    "20": { equalizacao: 0.18163880422293702, fator: 0.051447 },
+    "24": { equalizacao: 0.2110262903899,     fator: 0.042936 },
+    "30": { equalizacao: 0.252423947932931,   fator: 0.034399 },
+    "36": { equalizacao: 0.290838207305738,   fator: 0.028693 },
+    "40": { equalizacao: 0.314912098526916,   fator: 0.025836 },
+    "42": { equalizacao: 0.326513927685167,   fator: 0.024611 }
+  },
+  "0.99": {
+    "6":  { equalizacao: 0.0334882274589979,  fator: 0.175014 },
+    "10": { equalizacao: 0.0516125603890935,  fator: 0.107644 },
+    "12": { equalizacao: 0.0604103624074597,  fator: 0.090822 },
+    "15": { equalizacao: 0.0732862426035454,  fator: 0.073935 },
+    "18": { equalizacao: 0.0857871108872601,  fator: 0.062628 },
+    "20": { equalizacao: 0.093918090215402,   fator: 0.056962 },
+    "24": { equalizacao: 0.109707184125572,   fator: 0.048449 },
+    "30": { equalizacao: 0.132254200840495,   fator: 0.039928 },
+    "36": { equalizacao: 0.153506979583435,   fator: 0.034249 },
+    "40": { equalizacao: 0.166993344274932,   fator: 0.031414 },
+    "42": { equalizacao: 0.173539814299164,   fator: 0.030201 }
+  },
+  "1.39": {
+    "6":  { equalizacao: 0.0201568575602853,  fator: 0.177428 },
+    "10": { equalizacao: 0.0311412978252027,  fator: 0.109968 },
+    "12": { equalizacao: 0.0364922537621693,  fator: 0.093134 },
+    "15": { equalizacao: 0.0443457655299061,  fator: 0.076244 },
+    "18": { equalizacao: 0.0519956174240499,  fator: 0.064943 },
+    "20": { equalizacao: 0.0569844859492114,  fator: 0.059284 },
+    "24": { equalizacao: 0.066701364072283,   fator: 0.050790 },
+    "30": { equalizacao: 0.0806429282522513,  fator: 0.042303 },
+    "36": { equalizacao: 0.0938527772803189,  fator: 0.036663 },
+    "40": { equalizacao: 0.102268435706342,   fator: 0.033855 },
+    "42": { equalizacao: 0.106362424033621,   fator: 0.032655 }
+  },
+  "1.99": {
+    "6":  { equalizacao: -0.00000000000000232830643653687, fator: 0.181078 },
+    "10": { equalizacao: -0.0000000000000014328039609469,  fator: 0.113503 },
+    "12": { equalizacao: -0.0000000000000017910049511836,  fator: 0.096661 },
+    "15": { equalizacao:  0.0,                              fator: 0.079782 },
+    "18": { equalizacao: -0.0000000000000016119044560653,  fator: 0.068505 },
+    "20": { equalizacao: -0.0000000000000017910049511836,  fator: 0.062866 },
+    "24": { equalizacao: -0.000000000000001970105446302,   fator: 0.054420 },
+    "30": { equalizacao: -0.0000000000000016119044560653,  fator: 0.046014 },
+    "36": { equalizacao: -0.0000000000000014328039609469,  fator: 0.040460 },
+    "40": { equalizacao: -0.0000000000000014328039609469,  fator: 0.037712 },
+    "42": { equalizacao: -0.0000000000000014328039609469,  fator: 0.036542 }
+  }
+};
 
 // === Utils ===
 const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const PCT = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 2 });
-function toNumberFromBRL(text){ if(!text) return 0; let s=String(text).trim(); s=s.replace(/[^0-9,\.]/g,''); s=s.replace(/\./g,''); if(s.includes(',')){ s=s.replace(/,([^,]*)$/, '.$1'); s=s.replace(/,/g,''); } const v=parseFloat(s); return isNaN(v)?0:v; }
+function toNumberFromBRL(text){
+  if(!text) return 0;
+  let s=String(text).trim();
+  s=s.replace(/[^0-9,\.]/g,''); // mantém dígitos, vírgula e ponto
+  s=s.replace(/\./g,'');        // remove todos os pontos (milhar)
+  if(s.includes(',')){          // última vírgula vira decimal
+    s=s.replace(/,([^,]*)$/, '.$1');
+    s=s.replace(/,/g,'');
+  }
+  const v=parseFloat(s);
+  return isNaN(v)?0:v;
+}
 function fmtBRL(n){ return BRL.format(n||0); }
 
 // === Elementos ===
 const el = (id)=>document.getElementById(id);
+const logoBox = el('logoBox');
 const valorLancha = el('valorLancha');
 const percEntrada = el('percEntrada');
 const taxaComercial = el('taxaComercial');
@@ -122,6 +212,7 @@ const equalizacaoPerc = el('equalizacaoPerc');
 const valorSubsidiado = el('valorSubsidiado');
 const valorLiquido = el('valorLiquido');
 const valorTotalRecebido = el('valorTotalRecebido');
+const resumoBox = el('resumoFin');
 
 function recalc(){
   const vl = toNumberFromBRL(valorLancha.value);
@@ -144,18 +235,22 @@ function recalc(){
     valorSubsidiado.value = '';
     valorLiquido.textContent = '—';
     valorTotalRecebido.textContent = '—';
-    const box = document.getElementById('resumoFin'); if (box) box.textContent = 'Preencha os campos para ver o resumo do financiamento.';
+    if (resumoBox) resumoBox.textContent = 'Preencha os campos para ver o resumo do financiamento.';
     return;
   }
 
+  // Usa exatamente o FATOR e a EQUALIZAÇÃO da tabela enviada
   const fator = Number(row.fator||0);
-  const eq = Number(row.equalizacao||0); // fração 0..1
+  let eq = Number(row.equalizacao||0);
+  if (Math.abs(eq) < 1e-14) eq = 0; // elimina ruído microscópico
 
+  // Cálculos principais
   const parcela = fator * financiadoR;
   const subsidio = eq * financiadoR;
   const liquido = Math.max(0, financiadoR - subsidio);
   const totalRecebido = entradaR + liquido;
 
+  // Exibição
   parcelaMensal.value = fmtBRL(parcela);
   equalizacaoPerc.value = PCT.format(eq);
   valorSubsidiado.value = fmtBRL(subsidio);
@@ -165,10 +260,18 @@ function recalc(){
   const pctLabel = new Intl.NumberFormat('pt-BR', { style:'percent', maximumFractionDigits: 2 }).format(pctDelta);
   valorTotalRecebido.textContent = `${fmtBRL(totalRecebido)} (${pctLabel})`;
 
-  // Rodapé/resumo
+  // ===== Resumo (card dedicado) =====
   try {
-    const resumo = `A lancha tem um custo total de ${fmtBRL(vl)}, o seu financiamento tem ${pe.toFixed(2).replace('.', ',')}% de entrada (${fmtBRL(entradaR)}) e será feito a ${prazo} parcelas de ${fmtBRL(parcela)}.`;
-    const box = document.getElementById('resumoFin'); if (box) box.textContent = resumo;
+    const taxaLabel = `${taxa.replace('.', ',')}% a.m.`;
+    const resumo =
+      `A lancha custa ${fmtBRL(vl)}. ` +
+      `A entrada é ${fmtBRL(entradaR)} (${pe.toFixed(2).replace('.', ',')}%) ` +
+      `e o saldo a financiar é ${fmtBRL(financiadoR)} (${percFin.toFixed(2).replace('.', ',')}%). ` +
+      `O financiamento tem taxa comercial ${taxaLabel} ` +
+      `e será pago em ${prazo} parcelas de ${fmtBRL(parcela)}. ` +
+      `Com equalização de ${PCT.format(eq)} (= ${fmtBRL(subsidio)}), ` +
+      `a NX Boats recebe ${fmtBRL(totalRecebido)} (entrada + financiamento líquido de equalização).`;
+    if (resumoBox) resumoBox.textContent = resumo;
   } catch(e){}
 }
 
@@ -189,19 +292,20 @@ numParcelas.addEventListener('change', recalc);
 
 // Copiar resultados
 (document.getElementById('copiar')||{}).onclick = async () => {
-  const vLancha = document.getElementById('valorLancha').value || 'R$ 0,00';
-  const pEntrada = document.getElementById('percEntrada').value || '0';
-  const vEntrada = document.getElementById('valorEntrada').value || 'R$ 0,00';
-  const pFin = document.getElementById('percFinanciado').value || '0%';
-  const vFin = document.getElementById('valorFinanciado').value || 'R$ 0,00';
-  const taxa = document.getElementById('taxaComercial').value.replace('.', ',') + '% a.m.';
-  const prazo = document.getElementById('numParcelas').value + ' meses';
-  const parcela = document.getElementById('parcelaMensal').value || 'R$ 0,00';
-  const eq = document.getElementById('equalizacaoPerc').value || '0%';
-  const subsidio = document.getElementById('valorSubsidiado').value || 'R$ 0,00';
-  const liquido = document.getElementById('valorLiquido').textContent || 'R$ 0,00';
-  const total = document.getElementById('valorTotalRecebido').textContent || 'R$ 0,00';
-  const resumo = document.getElementById('resumoFin')?.textContent || '';
+  const vLancha = valorLancha.value || 'R$ 0,00';
+  const pEntrada = percEntrada.value || '0';
+  const vEntrada = valorEntrada.value || 'R$ 0,00';
+  const pFin = percFinanciado.value || '0%';
+  const vFin = valorFinanciado.value || 'R$ 0,00';
+  const taxa = taxaComercial.value.replace('.', ',') + '% a.m.';
+  const prazo = numParcelas.value + ' meses';
+  const parcela = parcelaMensal.value || 'R$ 0,00';
+  const eq = equalizacaoPerc.value || '0%';
+  const subsidio = valorSubsidiado.value || 'R$ 0,00';
+  const liquido = valorLiquido.textContent || 'R$ 0,00';
+  const total = valorTotalRecebido.textContent || 'R$ 0,00';
+  const resumo = resumoBox?.textContent || '';
+
   const lines = [
     `Valor da Lancha: ${vLancha}`,
     `% Entrada: ${pEntrada}%`,
@@ -218,12 +322,31 @@ numParcelas.addEventListener('change', recalc);
     '',
     `Resumo: ${resumo}`
   ];
-  try { await navigator.clipboard.writeText(lines.join('\n')); notify('Resultados copiados.'); }
-  catch(e){ notify('Não foi possível copiar automaticamente — copie manualmente.', true); }
+
+  try {
+    await navigator.clipboard.writeText(lines.join('\n'));
+    alert('Resultados copiados.');
+  } catch(e){
+    alert('Não foi possível copiar automaticamente — selecione e copie o texto manualmente.');
+  }
 };
 
 // Limpar
-(document.getElementById('limpar')||{}).onclick = ()=>{ valorLancha.value=''; percEntrada.value=''; taxaComercial.value='1.99'; numParcelas.value='6'; recalc(); };
+(document.getElementById('limpar')||{}).onclick = ()=>{
+  valorLancha.value='';
+  percEntrada.value='';
+  taxaComercial.value='1.99';
+  numParcelas.value='6';
+  if (resumoBox) resumoBox.textContent = 'Preencha os campos para ver o resumo do financiamento.';
+  recalc();
+};
+
+// Logo dinâmica
+(function applyLogo(){
+  if (LOGO_URL) {
+    logoBox.style.backgroundImage = `url('${LOGO_URL}')`;
+  }
+})();
 
 // Inicializa
 recalc();
