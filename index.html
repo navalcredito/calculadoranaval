@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NX Boats • Simulador de Financiamento</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #121a2b;
+      --muted: #8aa0c5;
+      --text: #f2f6ff;
+      --accent: #2dd4bf;
+      --accent-2: #60a5fa;
+      --danger: #f87171;
+      --ok: #34d399;
+      --radius: 16px;
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, 'Helvetica Neue', Arial;
+      background: radial-gradient(1200px 800px at 20% -10%, #14203a 0%, rgba(20,32,58,0) 60%),
+                  radial-gradient(1000px 700px at 120% 20%, #0f1b30 0%, rgba(15,27,48,0) 60%),
+                  var(--bg);
+      color: var(--text);
+    }
+    .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand .logo { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+    .brand h1 { font-size: 20px; margin: 0; }
+    .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius); padding: 16px; }
+    .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; }
+    @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
+    label { display:block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    input, select { width: 100%; border-radius: 12px; padding: 10px; font-size: 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #111827; }
+    select option { color: #111827; background: #ffffff; }
+    input[readonly] { opacity: .9; background: rgba(255,255,255,0.05); color: var(--text); }
+    .footer { display:flex; gap:10px; justify-content:flex-end; padding-top: 12px; }
+    button { cursor: pointer; border-radius: 12px; padding: 10px 14px; font-weight: 600; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.08); color: var(--text); }
+    button.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <div class="logo"></div>
+        <h1>NX Boats • Simulador de Financiamento</h1>
+      </div>
+      <div class="help">SP Boat Show 2025</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Parâmetros</h2>
+        <label>Valor da Lancha (R$)</label>
+        <input id="valorLancha" type="text" placeholder="R$ 0,00" />
+
+        <label>% Valor entrada (%)</label>
+        <input id="percEntrada" type="number" placeholder="Ex.: 30" />
+
+        <label>Taxa Comercial (% a.m.)</label>
+        <select id="taxaComercial">
+          <option value="0.00">0,00%</option>
+          <option value="0.99">0,99%</option>
+          <option value="1.39">1,39%</option>
+          <option value="1.99" selected>1,99%</option>
+        </select>
+
+        <label>Número de Parcelas (meses)</label>
+        <select id="numParcelas">
+          <option>6</option><option>10</option><option>12</option><option>15</option><option>18</option><option>20</option><option>24</option><option>30</option><option>36</option><option>40</option><option>42</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <h2>Resultados</h2>
+        <div><label>Valor entrada (R$)</label><input id="valorEntrada" readonly /></div>
+        <div><label>% Valor financiado (%)</label><input id="percFinanciado" readonly /></div>
+        <div><label>Valor financiado (R$)</label><input id="valorFinanciado" readonly /></div>
+        <div><label>Valor Parcela Mensal (R$/mês)</label><input id="parcelaMensal" readonly /></div>
+        <div><label>Equalização de Taxa (%)</label><input id="equalizacaoPerc" readonly /></div>
+        <div><label>Valor Subsidiado (R$)</label><input id="valorSubsidiado" readonly /></div>
+        <div><label>Valor Financiado líquido de Equalização (R$)</label><div id="valorLiquido">R$ 0,00</div></div>
+        <div><label>Valor Total Recebido (R$)</label><div id="valorTotalRecebido">R$ 0,00</div></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <button id="copiar">Copiar resultados</button>
+      <button id="limpar" class="primary">Limpar</button>
+    </div>
+  </div>
+
+  <script>
+// === TABELA (extraída da planilha CalcSPBS.xlsx) ===
+// mapping[taxaPercentString][prazoMeses] -> { equalizacao (fração 0..1), fator }
+const TABLE = {
+  "0.00": {
+    "6": {"equalizacao":0.06611304500173112,"fator":0.16910615058904058},
+    "10": {"equalizacao":0.10127134048048324,"fator":0.10200795336170877},
+    "12": {"equalizacao":0.11818009223127306,"fator":0.08523760885701502},
+    "15": {"equalizacao":0.1427412267352882,"fator":0.06839363110163799},
+    "18": {"equalizacao":0.1663766104598558,"fator":0.057107444276325726},
+    "20": {"equalizacao":0.18163857226763812,"fator":0.051446999391783074},
+    "24": {"equalizacao":0.21102583694675215,"fator":0.04293587266432932},
+    "30": {"equalizacao":0.2524235284614596,"fator":0.03439933933039835},
+    "36": {"equalizacao":0.29083813217125515,"fator":0.02869316496607458},
+    "40": {"equalizacao":0.3149115455777799,"fator":0.025835737447969787},
+    "42": {"equalizacao":0.3265138171864584,"fator":0.02461070499480921}
+  },
+  "0.99": {
+    "6": {"equalizacao":0.03348788256717861,"fator":0.1750137745886824},
+    "10": {"equalizacao":0.05161320568513417,"fator":0.10764357891368887},
+    "12": {"equalizacao":0.06040967544692319,"fator":0.09082218339862316},
+    "15": {"equalizacao":0.0732862428572402,"fator":0.07393486972350302},
+    "18": {"equalizacao":0.0857871719987129,"fator":0.06262767012969577},
+    "20": {"equalizacao":0.09391835753570825,"fator":0.05696246610667561},
+    "24": {"equalizacao":0.10970691754315026,"fator":0.048448920093051804},
+    "30": {"equalizacao":0.13225437833473225,"fator":0.03992771977593361},
+    "36": {"equalizacao":0.15350681133307672,"fator":0.03424892160261171},
+    "40": {"equalizacao":0.1661537701247666,"fator":0.031475912938705665},
+    "42": {"equalizacao":0.17175965979880345,"fator":0.030343479911329063}
+  },
+  "1.39": {
+    "6": {"equalizacao":0.02077057443304039,"fator":0.17795136387726796},
+    "10": {"equalizacao":0.03229666518769003,"fator":0.11051066472983299},
+    "12": {"equalizacao":0.036492245551989784,"fator":0.0931340701034643},
+    "15": {"equalizacao":0.04434577201811202,"fator":0.07624420487518073},
+    "18": {"equalizacao":0.05199562356921143,"fator":0.0649429630532005},
+    "20": {"equalizacao":0.05698449444308464,"fator":0.059283793210310585},
+    "24": {"equalizacao":0.06670135718414054,"fator":0.05078982169666088},
+    "30": {"equalizacao":0.08064292755850571,"fator":0.04230309227241533},
+    "36": {"equalizacao":0.09385278176771486,"fator":0.03666274079112079},
+    "40": {"equalizacao":0.1022684220085158,"fator":0.03385535921746679},
+    "42": {"equalizacao":0.10636244066443416,"fator":0.03265480522940528}
+  },
+  "1.99": {
+    "6": {"equalizacao":0.0,"fator":0.18107802829172366},
+    "10": {"equalizacao":0.0,"fator":0.113503326988245},
+    "12": {"equalizacao":0.0,"fator":0.09666116398799687},
+    "15": {"equalizacao":0.0,"fator":0.0797819160362527},
+    "18": {"equalizacao":0.0,"fator":0.06850519780444108},
+    "20": {"equalizacao":0.0,"fator":0.06286604422974184},
+    "24": {"equalizacao":0.0,"fator":0.054420214978478426},
+    "30": {"equalizacao":0.0,"fator":0.04601371619444646},
+    "36": {"equalizacao":0.0,"fator":0.04045982959209824},
+    "40": {"equalizacao":0.0,"fator":0.03771172099625028},
+    "42": {"equalizacao":0.0,"fator":0.036541514334855115}
+  }
+};
+
+// === Utils de formatação/parse ===
+const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const PCT = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 2 });
+
+function toNumberFromBRL(text) {
+  if (!text) return 0;
+  let s = String(text).trim();
+  s = s.replace(/[^0-9,\.]/g, ''); // mantém apenas dígitos, vírgula, ponto
+  s = s.replace(/\./g, '');        // remove todos os pontos (milhar)
+  if (s.includes(',')) {            // última vírgula vira decimal
+    s = s.replace(/,([^,]*)$/, '.$1');
+    s = s.replace(/,/g, '');
+  }
+  const v = parseFloat(s);
+  return isNaN(v) ? 0 : v;
+}
+function fmtBRL(n){ return BRL.format(n || 0); }
+
+// === Elementos ===
+const el = (id)=>document.getElementById(id);
+const valorLancha = el('valorLancha');
+const percEntrada = el('percEntrada');
+const taxaComercial = el('taxaComercial');
+const numParcelas = el('numParcelas');
+const valorEntrada = el('valorEntrada');
+const percFinanciado = el('percFinanciado');
+const valorFinanciado = el('valorFinanciado');
+const parcelaMensal = el('parcelaMensal');
+const equalizacaoPerc = el('equalizacaoPerc');
+const valorSubsidiado = el('valorSubsidiado');
+const valorLiquido = el('valorLiquido');
+const valorTotalRecebido = el('valorTotalRecebido');
+
+function recalc(){
+  const vl = toNumberFromBRL(valorLancha.value);
+  const pe = parseFloat(String(percEntrada.value).replace(',', '.')) || 0;
+  const taxa = String(taxaComercial.value);
+  const prazo = parseInt(numParcelas.value,10);
+
+  // Entradas derivadas
+  const entradaR = vl * (pe/100);
+  const percFin = Math.max(0, 100 - pe);
+  const financiadoR = Math.max(0, vl - entradaR);
+
+  valorEntrada.value = fmtBRL(entradaR);
+  percFinanciado.value = `${percFin.toFixed(2).replace('.', ',')}%`;
+  valorFinanciado.value = fmtBRL(financiadoR);
+
+  const row = (TABLE[taxa]||{})[prazo];
+  if (!row) {
+    parcelaMensal.value = '';
+    equalizacaoPerc.value = '';
+    valorSubsidiado.value = '';
+    valorLiquido.textContent = '—';
+    valorTotalRecebido.textContent = '—';
+    return;
+  }
+
+  const fator = Number(row.fator||0);
+  const eq = Number(row.equalizacao||0); // fração 0..1
+
+  const parcela = fator * financiadoR;
+  const subsidio = eq * financiadoR;
+  const liquido = Math.max(0, financiadoR - subsidio);
+  const totalRecebido = entradaR + liquido;
+
+  parcelaMensal.value = fmtBRL(parcela);
+  equalizacaoPerc.value = PCT.format(eq); // exibe 0..1 como %
+  valorSubsidiado.value = fmtBRL(subsidio);
+  valorLiquido.textContent = fmtBRL(liquido);
+  valorTotalRecebido.textContent = fmtBRL(totalRecebido);
+}
+
+// === Interações ===
+// Cálculo automático enquanto o vendedor digita / muda opções
+valorLancha.addEventListener('input', recalc);
+valorLancha.addEventListener('blur', ()=>{ const raw=toNumberFromBRL(valorLancha.value); valorLancha.value = raw?fmtBRL(raw):''; });
+percEntrada.addEventListener('input', recalc);
+taxaComercial.addEventListener('change', recalc);
+numParcelas.addEventListener('change', recalc);
+// Botão Calcular continua funcionando
+(document.getElementById('calcular')||{}).onclick = recalc;
+// Limpar reinicia
+(document.getElementById('limpar')||{}).onclick = ()=>{ valorLancha.value=''; percEntrada.value=''; taxaComercial.value='1.99'; numParcelas.value='6'; recalc(); };
+// Inicializa
+recalc();
+</script>
+</body>
+</html>
