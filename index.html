@@ -33,12 +33,16 @@
     .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; }
     @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
     label { display:block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-    input, select { width: 100%; border-radius: 12px; padding: 10px; font-size: 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #111827; }
-    select option { color: #111827; background: #ffffff; }
+    input, select { width: 100%; border-radius: 12px; padding: 10px; font-size: 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); }
+    /* Inputs em branco (alto contraste), selects em azul */
+    input[type="text"], input[type="number"] { color: var(--text) !important; }
+    select, select option { color: var(--accent-2) !important; }
+    ::placeholder { color: rgba(255,255,255,0.6); }
     input[readonly] { opacity: .9; background: rgba(255,255,255,0.05); color: var(--text); }
     .footer { display:flex; gap:10px; justify-content:flex-end; padding-top: 12px; }
     button { cursor: pointer; border-radius: 12px; padding: 10px 14px; font-weight: 600; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.08); color: var(--text); }
     button.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; color: #fff; }
+    .help { color: var(--muted); font-size: 12px; }
   </style>
 </head>
 <body>
@@ -84,6 +88,7 @@
         <div><label>Valor Subsidiado (R$)</label><input id="valorSubsidiado" readonly /></div>
         <div><label>Valor Financiado líquido de Equalização (R$)</label><div id="valorLiquido">R$ 0,00</div></div>
         <div><label>Valor Total Recebido (R$)</label><div id="valorTotalRecebido">R$ 0,00</div></div>
+        <p id="resumoFin" class="help" style="margin-top:8px;">Preencha os campos para ver o resumo do financiamento.</p>
       </div>
     </div>
 
@@ -95,79 +100,13 @@
 
   <script>
 // === TABELA (extraída da planilha CalcSPBS.xlsx) ===
-// mapping[taxaPercentString][prazoMeses] -> { equalizacao (fração 0..1), fator }
-const TABLE = {
-  "0.00": {
-    "6": {"equalizacao":0.06611304500173112,"fator":0.16910615058904058},
-    "10": {"equalizacao":0.10127134048048324,"fator":0.10200795336170877},
-    "12": {"equalizacao":0.11818009223127306,"fator":0.08523760885701502},
-    "15": {"equalizacao":0.1427412267352882,"fator":0.06839363110163799},
-    "18": {"equalizacao":0.1663766104598558,"fator":0.057107444276325726},
-    "20": {"equalizacao":0.18163857226763812,"fator":0.051446999391783074},
-    "24": {"equalizacao":0.21102583694675215,"fator":0.04293587266432932},
-    "30": {"equalizacao":0.2524235284614596,"fator":0.03439933933039835},
-    "36": {"equalizacao":0.29083813217125515,"fator":0.02869316496607458},
-    "40": {"equalizacao":0.3149115455777799,"fator":0.025835737447969787},
-    "42": {"equalizacao":0.3265138171864584,"fator":0.02461070499480921}
-  },
-  "0.99": {
-    "6": {"equalizacao":0.03348788256717861,"fator":0.1750137745886824},
-    "10": {"equalizacao":0.05161320568513417,"fator":0.10764357891368887},
-    "12": {"equalizacao":0.06040967544692319,"fator":0.09082218339862316},
-    "15": {"equalizacao":0.0732862428572402,"fator":0.07393486972350302},
-    "18": {"equalizacao":0.0857871719987129,"fator":0.06262767012969577},
-    "20": {"equalizacao":0.09391835753570825,"fator":0.05696246610667561},
-    "24": {"equalizacao":0.10970691754315026,"fator":0.048448920093051804},
-    "30": {"equalizacao":0.13225437833473225,"fator":0.03992771977593361},
-    "36": {"equalizacao":0.15350681133307672,"fator":0.03424892160261171},
-    "40": {"equalizacao":0.1661537701247666,"fator":0.031475912938705665},
-    "42": {"equalizacao":0.17175965979880345,"fator":0.030343479911329063}
-  },
-  "1.39": {
-    "6": {"equalizacao":0.02077057443304039,"fator":0.17795136387726796},
-    "10": {"equalizacao":0.03229666518769003,"fator":0.11051066472983299},
-    "12": {"equalizacao":0.036492245551989784,"fator":0.0931340701034643},
-    "15": {"equalizacao":0.04434577201811202,"fator":0.07624420487518073},
-    "18": {"equalizacao":0.05199562356921143,"fator":0.0649429630532005},
-    "20": {"equalizacao":0.05698449444308464,"fator":0.059283793210310585},
-    "24": {"equalizacao":0.06670135718414054,"fator":0.05078982169666088},
-    "30": {"equalizacao":0.08064292755850571,"fator":0.04230309227241533},
-    "36": {"equalizacao":0.09385278176771486,"fator":0.03666274079112079},
-    "40": {"equalizacao":0.1022684220085158,"fator":0.03385535921746679},
-    "42": {"equalizacao":0.10636244066443416,"fator":0.03265480522940528}
-  },
-  "1.99": {
-    "6": {"equalizacao":0.0,"fator":0.18107802829172366},
-    "10": {"equalizacao":0.0,"fator":0.113503326988245},
-    "12": {"equalizacao":0.0,"fator":0.09666116398799687},
-    "15": {"equalizacao":0.0,"fator":0.0797819160362527},
-    "18": {"equalizacao":0.0,"fator":0.06850519780444108},
-    "20": {"equalizacao":0.0,"fator":0.06286604422974184},
-    "24": {"equalizacao":0.0,"fator":0.054420214978478426},
-    "30": {"equalizacao":0.0,"fator":0.04601371619444646},
-    "36": {"equalizacao":0.0,"fator":0.04045982959209824},
-    "40": {"equalizacao":0.0,"fator":0.03771172099625028},
-    "42": {"equalizacao":0.0,"fator":0.036541514334855115}
-  }
-};
+const TABLE = {"0.00":{"6":{"equalizacao":0.06611304500173112,"fator":0.16910615058904058},"10":{"equalizacao":0.10127134048048324,"fator":0.10200795336170877},"12":{"equalizacao":0.11818009223127306,"fator":0.08523760885701502},"15":{"equalizacao":0.1427412267352882,"fator":0.06839363110163799},"18":{"equalizacao":0.1663766104598558,"fator":0.057107444276325726},"20":{"equalizacao":0.18163857226763812,"fator":0.051446999391783074},"24":{"equalizacao":0.21102583694675215,"fator":0.04293587266432932},"30":{"equalizacao":0.2524235284614596,"fator":0.03439933933039835},"36":{"equalizacao":0.29083813217125515,"fator":0.02869316496607458},"40":{"equalizacao":0.3149115455777799,"fator":0.025835737447969787},"42":{"equalizacao":0.3265138171864584,"fator":0.02461070499480921}},"0.99":{"6":{"equalizacao":0.03348788256717861,"fator":0.1750137745886824},"10":{"equalizacao":0.05161320568513417,"fator":0.10764357891368887},"12":{"equalizacao":0.06040967544692319,"fator":0.09082218339862316},"15":{"equalizacao":0.0732862428572402,"fator":0.07393486972350302},"18":{"equalizacao":0.0857871719987129,"fator":0.06262767012969577},"20":{"equalizacao":0.09391835753570825,"fator":0.05696246610667561},"24":{"equalizacao":0.10970691754315026,"fator":0.048448920093051804},"30":{"equalizacao":0.13225437833473225,"fator":0.03992771977593361},"36":{"equalizacao":0.15350681133307672,"fator":0.03424892160261171},"40":{"equalizacao":0.1661537701247666,"fator":0.031475912938705665},"42":{"equalizacao":0.17175965979880345,"fator":0.030343479911329063}},"1.39":{"6":{"equalizacao":0.02077057443304039,"fator":0.17795136387726796},"10":{"equalizacao":0.03229666518769003,"fator":0.11051066472983299},"12":{"equalizacao":0.036492245551989784,"fator":0.0931340701034643},"15":{"equalizacao":0.04434577201811202,"fator":0.07624420487518073},"18":{"equalizacao":0.05199562356921143,"fator":0.0649429630532005},"20":{"equalizacao":0.05698449444308464,"fator":0.059283793210310585},"24":{"equalizacao":0.06670135718414054,"fator":0.05078982169666088},"30":{"equalizacao":0.08064292755850571,"fator":0.04230309227241533},"36":{"equalizacao":0.09385278176771486,"fator":0.03666274079112079},"40":{"equalizacao":0.1022684220085158,"fator":0.03385535921746679},"42":{"equalizacao":0.10636244066443416,"fator":0.03265480522940528}},"1.99":{"6":{"equalizacao":0.0,"fator":0.18107802829172366},"10":{"equalizacao":0.0,"fator":0.113503326988245},"12":{"equalizacao":0.0,"fator":0.09666116398799687},"15":{"equalizacao":0.0,"fator":0.0797819160362527},"18":{"equalizacao":0.0,"fator":0.06850519780444108},"20":{"equalizacao":0.0,"fator":0.06286604422974184},"24":{"equalizacao":0.0,"fator":0.054420214978478426},"30":{"equalizacao":0.0,"fator":0.04601371619444646},"36":{"equalizacao":0.0,"fator":0.04045982959209824},"40":{"equalizacao":0.0,"fator":0.03771172099625028},"42":{"equalizacao":0.0,"fator":0.036541514334855115}}};
 
-// === Utils de formatação/parse ===
+// === Utils ===
 const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const PCT = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 2 });
-
-function toNumberFromBRL(text) {
-  if (!text) return 0;
-  let s = String(text).trim();
-  s = s.replace(/[^0-9,\.]/g, ''); // mantém apenas dígitos, vírgula, ponto
-  s = s.replace(/\./g, '');        // remove todos os pontos (milhar)
-  if (s.includes(',')) {            // última vírgula vira decimal
-    s = s.replace(/,([^,]*)$/, '.$1');
-    s = s.replace(/,/g, '');
-  }
-  const v = parseFloat(s);
-  return isNaN(v) ? 0 : v;
-}
-function fmtBRL(n){ return BRL.format(n || 0); }
+function toNumberFromBRL(text){ if(!text) return 0; let s=String(text).trim(); s=s.replace(/[^0-9,\.]/g,''); s=s.replace(/\./g,''); if(s.includes(',')){ s=s.replace(/,([^,]*)$/, '.$1'); s=s.replace(/,/g,''); } const v=parseFloat(s); return isNaN(v)?0:v; }
+function fmtBRL(n){ return BRL.format(n||0); }
 
 // === Elementos ===
 const el = (id)=>document.getElementById(id);
@@ -190,7 +129,6 @@ function recalc(){
   const taxa = String(taxaComercial.value);
   const prazo = parseInt(numParcelas.value,10);
 
-  // Entradas derivadas
   const entradaR = vl * (pe/100);
   const percFin = Math.max(0, 100 - pe);
   const financiadoR = Math.max(0, vl - entradaR);
@@ -206,6 +144,7 @@ function recalc(){
     valorSubsidiado.value = '';
     valorLiquido.textContent = '—';
     valorTotalRecebido.textContent = '—';
+    const box = document.getElementById('resumoFin'); if (box) box.textContent = 'Preencha os campos para ver o resumo do financiamento.';
     return;
   }
 
@@ -218,25 +157,76 @@ function recalc(){
   const totalRecebido = entradaR + liquido;
 
   parcelaMensal.value = fmtBRL(parcela);
-  equalizacaoPerc.value = PCT.format(eq); // exibe 0..1 como %
+  equalizacaoPerc.value = PCT.format(eq);
   valorSubsidiado.value = fmtBRL(subsidio);
   valorLiquido.textContent = fmtBRL(liquido);
-  valorTotalRecebido.textContent = fmtBRL(totalRecebido);
+
+  const pctDelta = (vl > 0) ? ((totalRecebido - vl) / vl) : 0;
+  const pctLabel = new Intl.NumberFormat('pt-BR', { style:'percent', maximumFractionDigits: 2 }).format(pctDelta);
+  valorTotalRecebido.textContent = `${fmtBRL(totalRecebido)} (${pctLabel})`;
+
+  // Rodapé/resumo
+  try {
+    const resumo = `A lancha tem um custo total de ${fmtBRL(vl)}, o seu financiamento tem ${pe.toFixed(2).replace('.', ',')}% de entrada (${fmtBRL(entradaR)}) e será feito a ${prazo} parcelas de ${fmtBRL(parcela)}.`;
+    const box = document.getElementById('resumoFin'); if (box) box.textContent = resumo;
+  } catch(e){}
 }
 
 // === Interações ===
-// Cálculo automático enquanto o vendedor digita / muda opções
-valorLancha.addEventListener('input', recalc);
+// Máscara de moeda com 2 casas no input
+valorLancha.addEventListener('input', () => {
+  const digits = String(valorLancha.value).replace(/\D/g, '');
+  if (!digits) { valorLancha.value = ''; recalc(); return; }
+  const num = parseFloat(digits) / 100;
+  valorLancha.value = BRL.format(num);
+  recalc();
+});
+// Formata no blur também (garantia)
 valorLancha.addEventListener('blur', ()=>{ const raw=toNumberFromBRL(valorLancha.value); valorLancha.value = raw?fmtBRL(raw):''; });
 percEntrada.addEventListener('input', recalc);
 taxaComercial.addEventListener('change', recalc);
 numParcelas.addEventListener('change', recalc);
-// Botão Calcular continua funcionando
-(document.getElementById('calcular')||{}).onclick = recalc;
-// Limpar reinicia
+
+// Copiar resultados
+(document.getElementById('copiar')||{}).onclick = async () => {
+  const vLancha = document.getElementById('valorLancha').value || 'R$ 0,00';
+  const pEntrada = document.getElementById('percEntrada').value || '0';
+  const vEntrada = document.getElementById('valorEntrada').value || 'R$ 0,00';
+  const pFin = document.getElementById('percFinanciado').value || '0%';
+  const vFin = document.getElementById('valorFinanciado').value || 'R$ 0,00';
+  const taxa = document.getElementById('taxaComercial').value.replace('.', ',') + '% a.m.';
+  const prazo = document.getElementById('numParcelas').value + ' meses';
+  const parcela = document.getElementById('parcelaMensal').value || 'R$ 0,00';
+  const eq = document.getElementById('equalizacaoPerc').value || '0%';
+  const subsidio = document.getElementById('valorSubsidiado').value || 'R$ 0,00';
+  const liquido = document.getElementById('valorLiquido').textContent || 'R$ 0,00';
+  const total = document.getElementById('valorTotalRecebido').textContent || 'R$ 0,00';
+  const resumo = document.getElementById('resumoFin')?.textContent || '';
+  const lines = [
+    `Valor da Lancha: ${vLancha}`,
+    `% Entrada: ${pEntrada}%`,
+    `Valor entrada: ${vEntrada}`,
+    `% Financiado: ${pFin}`,
+    `Valor financiado: ${vFin}`,
+    `Taxa Comercial: ${taxa}`,
+    `Prazo: ${prazo}`,
+    `Parcela Mensal: ${parcela}`,
+    `Equalização de Taxa: ${eq}`,
+    `Valor Subsidiado: ${subsidio}`,
+    `Valor Financiado líquido: ${liquido}`,
+    `Valor Total Recebido: ${total}`,
+    '',
+    `Resumo: ${resumo}`
+  ];
+  try { await navigator.clipboard.writeText(lines.join('\n')); notify('Resultados copiados.'); }
+  catch(e){ notify('Não foi possível copiar automaticamente — copie manualmente.', true); }
+};
+
+// Limpar
 (document.getElementById('limpar')||{}).onclick = ()=>{ valorLancha.value=''; percEntrada.value=''; taxaComercial.value='1.99'; numParcelas.value='6'; recalc(); };
+
 // Inicializa
 recalc();
-</script>
+  </script>
 </body>
 </html>
