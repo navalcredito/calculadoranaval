@@ -19,26 +19,30 @@
     html, body { height: 100%; }
     body {
       margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, 'Helvetica Neue', Arial;
-      background: radial-gradient(1200px 800px at 20% -10%, #14203a 0%, rgba(20,32,58,0) 60%),
-                  radial-gradient(1000px 700px at 120% 20%, #0f1b30 0%, rgba(15,27,48,0) 60%),
-                  var(--bg);
+      /* Fundo unificado para eliminar mancha azul no rodapé */
+      background: var(--bg);
       color: var(--text);
     }
-    .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
-    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; box-sizing: border-box; }
+    .header { position: relative; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     .brand { display: flex; align-items: center; gap: 12px; }
     .logo {
-      width: 40px; height: 40px; border-radius: 12px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      background-size: cover; background-position: center; background-repeat: no-repeat;
+      width: 56px; height: 56px; border-radius: 14px;
+      padding: 6px;
+      background-color: rgba(255,255,255,0.06);
+      background-image: linear-gradient(135deg, var(--accent), var(--accent-2));
+      background-size: contain; background-position: center; background-repeat: no-repeat;
+      box-sizing: border-box;
     }
     .brand h1 { font-size: 20px; margin: 0; }
-    .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius); padding: 16px; }
+    .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius); padding: 16px; box-sizing: border-box; }
     .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; }
     @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
-    label { display:block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-    input, select { width: 100%; border-radius: 12px; padding: 10px; font-size: 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); }
-    /* Inputs em branco (alto contraste), selects em azul */
+
+    /* Inputs e labels: proximidade e correções visuais */
+    .field { margin-bottom: 12px; }
+    label { display:block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    input, select { width: 100%; max-width: 100%; box-sizing: border-box; border-radius: 12px; padding: 10px; font-size: 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); }
     input[type="text"], input[type="number"] { color: var(--text) !important; }
     select, select option { color: var(--accent-2) !important; }
     ::placeholder { color: rgba(255,255,255,0.6); }
@@ -48,7 +52,7 @@
     button.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; color: #fff; }
     .help { color: var(--muted); font-size: 12px; }
 
-    /* Card de Resumo com texto maior para leitura rápida */
+    /* Card de Resumo */
     #resumoFin {
       font-size: 14px; line-height: 1.5; color: var(--text);
       background: rgba(255,255,255,0.02);
@@ -57,6 +61,19 @@
       padding: 12px;
       margin-top: 6px;
     }
+
+    /* Caixa de Atualizações fixa + botão fechar */
+    .updates {
+      position: fixed; top: 76px; right: 16px; width: 280px; z-index: 1000;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px; padding: 12px 12px 10px 12px; backdrop-filter: blur(6px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+    .updates h3 { margin: 0 0 4px; font-size: 14px; letter-spacing: .2px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .updates .item { font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .updates .close { cursor:pointer; border:none; background:transparent; color: var(--text); opacity:.7; font-size:14px; line-height:1; padding:2px 6px; border-radius:8px; }
+    .updates .close:hover{opacity:1; background: rgba(255,255,255,0.08);}
   </style>
 </head>
 <body>
@@ -66,44 +83,64 @@
         <div class="logo" id="logoBox"></div>
         <h1>NX Boats • Simulador de Financiamento</h1>
       </div>
-      <div class="help">SP Boat Show 2025</div>
+      <div class="help">Calculadora FIDC NX</div>
     </div>
+
+    <!-- Caixa de Atualizações (fixa) -->
+    <aside class="updates" aria-label="Atualizações" id="updatesBox">
+      <h3>Atualizações <button class="close" id="updatesClose" aria-label="Fechar">✕</button></h3>
+      <div class="item">v1.1 — Adicionamos a opção de entrada em R$ (preenchemos automaticamente a outra opção) + ajustes visuais. Também incluímos o envio do resumo via WhatsApp para a Naval.</div>
+    </aside>
 
     <div class="grid">
       <!-- Parâmetros -->
       <div class="card">
         <h2>Parâmetros</h2>
-        <label>Valor da Lancha (R$)</label>
-        <input id="valorLancha" type="text" placeholder="R$ 0,00" />
+        <div class="field">
+          <label for="valorLancha">Valor da Lancha (R$)</label>
+          <input id="valorLancha" type="text" placeholder="R$ 0,00" />
+        </div>
 
-        <label>% Valor entrada (%)</label>
-        <input id="percEntrada" type="number" placeholder="Ex.: 30" />
+        <!-- NOVO CAMPO: Valor entrada (R$) entre Valor da Lancha e % Entrada -->
+        <div class="field">
+          <label for="valorEntradaManual">Valor entrada (R$)</label>
+          <input id="valorEntradaManual" type="text" placeholder="R$ 0,00" />
+        </div>
 
-        <label>Taxa Comercial (% a.m.)</label>
-        <select id="taxaComercial">
-          <option value="0.00">0,00%</option>
-          <option value="0.99">0,99%</option>
-          <option value="1.39">1,39%</option>
-          <option value="1.99" selected>1,99%</option>
-        </select>
+        <div class="field">
+          <label for="percEntrada">% Valor entrada (%)</label>
+          <input id="percEntrada" type="number" step="0.01" placeholder="Ex.: 30" />
+        </div>
 
-        <label>Número de Parcelas (meses)</label>
-        <select id="numParcelas">
-          <option>6</option><option>10</option><option>12</option><option>15</option><option>18</option><option>20</option><option>24</option><option>30</option><option>36</option><option>40</option><option>42</option>
-        </select>
+        <div class="field">
+          <label for="taxaComercial">Taxa Comercial (% a.m.)</label>
+          <select id="taxaComercial">
+            <option value="0.00">0,00%</option>
+            <option value="0.99">0,99%</option>
+            <option value="1.39">1,39%</option>
+            <option value="1.99" selected>1,99%</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="numParcelas">Número de Parcelas (meses)</label>
+          <select id="numParcelas">
+            <option>6</option><option>10</option><option>12</option><option>15</option><option>18</option><option>20</option><option>24</option><option>30</option><option>36</option><option>40</option><option>42</option>
+          </select>
+        </div>
       </div>
 
       <!-- Resultados -->
       <div class="card">
         <h2>Resultados</h2>
-        <div><label>Valor entrada (R$)</label><input id="valorEntrada" readonly /></div>
-        <div><label>% Valor financiado (%)</label><input id="percFinanciado" readonly /></div>
-        <div><label>Valor financiado (R$)</label><input id="valorFinanciado" readonly /></div>
-        <div><label>Valor Parcela Mensal (R$/mês)</label><input id="parcelaMensal" readonly /></div>
-        <div><label>Equalização de Taxa (%)</label><input id="equalizacaoPerc" readonly /></div>
-        <div><label>Valor Subsidiado (R$)</label><input id="valorSubsidiado" readonly /></div>
-        <div><label>Valor Financiado líquido de Equalização (R$)</label><div id="valorLiquido">R$ 0,00</div></div>
-        <div><label>Valor Total Recebido (R$)</label><div id="valorTotalRecebido">R$ 0,00</div></div>
+        <div class="field"><label>Valor entrada (R$)</label><input id="valorEntrada" readonly /></div>
+        <div class="field"><label>% Valor financiado (%)</label><input id="percFinanciado" readonly /></div>
+        <div class="field"><label>Valor financiado (R$)</label><input id="valorFinanciado" readonly /></div>
+        <div class="field"><label>Valor Parcela Mensal (R$/mês)</label><input id="parcelaMensal" readonly /></div>
+        <div class="field"><label>Equalização de Taxa (%)</label><input id="equalizacaoPerc" readonly /></div>
+        <div class="field"><label>Valor Subsidiado (R$)</label><input id="valorSubsidiado" readonly /></div>
+        <div class="field"><label>Valor Financiado líquido de Equalização (R$)</label><div id="valorLiquido">R$ 0,00</div></div>
+        <div class="field"><label>Valor Total Recebido (R$)</label><div id="valorTotalRecebido">R$ 0,00</div></div>
       </div>
 
       <!-- Resumo -->
@@ -115,16 +152,16 @@
 
     <div class="footer">
       <button id="copiar">Copiar resultados</button>
+      <button id="enviarWhatsapp">Enviar para Naval via WhatsApp</button>
       <button id="limpar" class="primary">Limpar</button>
     </div>
   </div>
 
   <script>
 // ===== CONFIGURAÇÃO DA LOGO (substitua pela URL da sua PNG) =====
-const LOGO_URL = 'https://i.imgur.com/9D2KFZo.png'; // ex.: 'https://seu-dominio.com/logo.png'
+const LOGO_URL = 'https://i.imgur.com/9D2KFZo.png';
 
 // === TABELA (Taxa -> Prazo -> { equalizacao (fração 0..1), fator }) ===
-// Equalização convertida da tabela (% -> fração). Fatores exatamente como enviados.
 const TABLE = {
   "0.00": {
     "6":  { equalizacao: 0.0661130450017311,  fator: 0.169106 },
@@ -186,9 +223,9 @@ const PCT = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDi
 function toNumberFromBRL(text){
   if(!text) return 0;
   let s=String(text).trim();
-  s=s.replace(/[^0-9,\.]/g,''); // mantém dígitos, vírgula e ponto
-  s=s.replace(/\./g,'');        // remove todos os pontos (milhar)
-  if(s.includes(',')){          // última vírgula vira decimal
+  s=s.replace(/[^0-9,\.]/g,'');
+  s=s.replace(/\./g,'');
+  if(s.includes(',')){
     s=s.replace(/,([^,]*)$/, '.$1');
     s=s.replace(/,/g,'');
   }
@@ -201,6 +238,7 @@ function fmtBRL(n){ return BRL.format(n||0); }
 const el = (id)=>document.getElementById(id);
 const logoBox = el('logoBox');
 const valorLancha = el('valorLancha');
+const valorEntradaManual = el('valorEntradaManual');
 const percEntrada = el('percEntrada');
 const taxaComercial = el('taxaComercial');
 const numParcelas = el('numParcelas');
@@ -214,14 +252,37 @@ const valorLiquido = el('valorLiquido');
 const valorTotalRecebido = el('valorTotalRecebido');
 const resumoBox = el('resumoFin');
 
+let lastEdited = 'percEntrada'; // default: assume % até o usuário digitar em R$
+
 function recalc(){
   const vl = toNumberFromBRL(valorLancha.value);
   const pe = parseFloat(String(percEntrada.value).replace(',', '.')) || 0;
+  const veManual = toNumberFromBRL(valorEntradaManual.value);
   const taxa = String(taxaComercial.value);
   const prazo = parseInt(numParcelas.value,10);
 
-  const entradaR = vl * (pe/100);
-  const percFin = Math.max(0, 100 - pe);
+  // Sincronização % <-> R$
+  let entradaR = 0;
+  if (vl > 0) {
+    if (lastEdited === 'valorEntrada' && veManual >= 0) {
+      entradaR = Math.min(veManual, vl);
+      const pct = (entradaR / vl) * 100;
+      if (!Number.isNaN(pct)) {
+        percEntrada.value = pct.toFixed(2).replace('.', ',');
+      }
+    } else {
+      const pct = Math.max(0, Math.min(100, pe));
+      entradaR = vl * (pct/100);
+      if (document.activeElement !== valorEntradaManual) {
+        valorEntradaManual.value = entradaR ? fmtBRL(entradaR) : '';
+      }
+    }
+  } else {
+    entradaR = 0;
+    if (document.activeElement !== valorEntradaManual) valorEntradaManual.value = '';
+  }
+
+  const percFin = vl > 0 ? Math.max(0, 100 - (entradaR / (vl||1)) * 100) : 0;
   const financiadoR = Math.max(0, vl - entradaR);
 
   valorEntrada.value = fmtBRL(entradaR);
@@ -239,18 +300,15 @@ function recalc(){
     return;
   }
 
-  // Usa exatamente o FATOR e a EQUALIZAÇÃO da tabela enviada
   const fator = Number(row.fator||0);
   let eq = Number(row.equalizacao||0);
-  if (Math.abs(eq) < 1e-14) eq = 0; // elimina ruído microscópico
+  if (Math.abs(eq) < 1e-14) eq = 0;
 
-  // Cálculos principais
   const parcela = fator * financiadoR;
   const subsidio = eq * financiadoR;
   const liquido = Math.max(0, financiadoR - subsidio);
   const totalRecebido = entradaR + liquido;
 
-  // Exibição
   parcelaMensal.value = fmtBRL(parcela);
   equalizacaoPerc.value = PCT.format(eq);
   valorSubsidiado.value = fmtBRL(subsidio);
@@ -260,12 +318,11 @@ function recalc(){
   const pctLabel = new Intl.NumberFormat('pt-BR', { style:'percent', maximumFractionDigits: 2 }).format(pctDelta);
   valorTotalRecebido.textContent = `${fmtBRL(totalRecebido)} (${pctLabel})`;
 
-  // ===== Resumo (card dedicado) =====
   try {
     const taxaLabel = `${taxa.replace('.', ',')}% a.m.`;
     const resumo =
       `A lancha custa ${fmtBRL(vl)}. ` +
-      `A entrada é ${fmtBRL(entradaR)} (${pe.toFixed(2).replace('.', ',')}%) ` +
+      `A entrada é ${fmtBRL(entradaR)} (${((vl>0)?(entradaR/vl*100):0).toFixed(2).replace('.', ',')}%) ` +
       `e o saldo a financiar é ${fmtBRL(financiadoR)} (${percFin.toFixed(2).replace('.', ',')}%). ` +
       `O financiamento tem taxa comercial ${taxaLabel} ` +
       `e será pago em ${prazo} parcelas de ${fmtBRL(parcela)}. ` +
@@ -276,7 +333,7 @@ function recalc(){
 }
 
 // === Interações ===
-// Máscara de moeda com 2 casas no input
+// Máscara de moeda com 2 casas no input (lancha)
 valorLancha.addEventListener('input', () => {
   const digits = String(valorLancha.value).replace(/\D/g, '');
   if (!digits) { valorLancha.value = ''; recalc(); return; }
@@ -284,15 +341,30 @@ valorLancha.addEventListener('input', () => {
   valorLancha.value = BRL.format(num);
   recalc();
 });
-// Formata no blur também (garantia)
-valorLancha.addEventListener('blur', ()=>{ const raw=toNumberFromBRL(valorLancha.value); valorLancha.value = raw?fmtBRL(raw):''; });
-percEntrada.addEventListener('input', recalc);
+valorLancha.addEventListener('blur', ()=>{ const raw=toNumberFromBRL(valorLancha.value); valorLancha.value = raw?fmtBRL(raw):''; recalc(); });
+
+// Máscara de moeda para a entrada em R$
+valorEntradaManual.addEventListener('input', () => {
+  lastEdited = 'valorEntrada';
+  const digits = String(valorEntradaManual.value).replace(/\D/g, '');
+  if (!digits) { valorEntradaManual.value = ''; recalc(); return; }
+  const num = parseFloat(digits) / 100;
+  valorEntradaManual.value = BRL.format(num);
+  recalc();
+});
+valorEntradaManual.addEventListener('blur', ()=>{ lastEdited='valorEntrada'; const raw=toNumberFromBRL(valorEntradaManual.value); valorEntradaManual.value = raw?fmtBRL(raw):''; recalc(); });
+
+// % entrada controla quando editado
+percEntrada.addEventListener('input', ()=>{ lastEdited='percEntrada'; recalc(); });
+
+// Demais controles
 taxaComercial.addEventListener('change', recalc);
 numParcelas.addEventListener('change', recalc);
 
 // Copiar resultados
 (document.getElementById('copiar')||{}).onclick = async () => {
   const vLancha = valorLancha.value || 'R$ 0,00';
+  const vEntradaManual = valorEntradaManual.value || 'R$ 0,00';
   const pEntrada = percEntrada.value || '0';
   const vEntrada = valorEntrada.value || 'R$ 0,00';
   const pFin = percFinanciado.value || '0%';
@@ -308,8 +380,9 @@ numParcelas.addEventListener('change', recalc);
 
   const lines = [
     `Valor da Lancha: ${vLancha}`,
+    `Valor entrada informado: ${vEntradaManual}`,
     `% Entrada: ${pEntrada}%`,
-    `Valor entrada: ${vEntrada}`,
+    `Valor entrada (efetivo): ${vEntrada}`,
     `% Financiado: ${pFin}`,
     `Valor financiado: ${vFin}`,
     `Taxa Comercial: ${taxa}`,
@@ -331,12 +404,23 @@ numParcelas.addEventListener('change', recalc);
   }
 };
 
+// Enviar via WhatsApp (Naval)
+(document.getElementById('enviarWhatsapp')||{}).onclick = async () => {
+  const resumo = resumoBox?.textContent || '';
+  try { await navigator.clipboard.writeText(resumo); } catch(e){}
+  const phone = '5511916631101'; // +55 11 91663-1101
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(resumo)}`;
+  window.open(url, '_blank');
+};
+
 // Limpar
 (document.getElementById('limpar')||{}).onclick = ()=>{
   valorLancha.value='';
+  valorEntradaManual.value='';
   percEntrada.value='';
   taxaComercial.value='1.99';
   numParcelas.value='6';
+  lastEdited='percEntrada';
   if (resumoBox) resumoBox.textContent = 'Preencha os campos para ver o resumo do financiamento.';
   recalc();
 };
@@ -347,6 +431,12 @@ numParcelas.addEventListener('change', recalc);
     logoBox.style.backgroundImage = `url('${LOGO_URL}')`;
   }
 })();
+
+// Fechar caixa de atualizações
+(document.getElementById('updatesClose')||{}).onclick = () => {
+  const box = document.getElementById('updatesBox');
+  if (box) box.style.display = 'none';
+};
 
 // Inicializa
 recalc();
