@@ -19,8 +19,7 @@
     html, body { height: 100%; }
     body {
       margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, 'Helvetica Neue', Arial;
-      /* Fundo unificado para eliminar mancha azul no rodapé */
-      background: var(--bg);
+      background: var(--bg); /* fundo unificado para evitar manchas no rodapé */
       color: var(--text);
     }
     .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; box-sizing: border-box; }
@@ -28,7 +27,7 @@
     .brand { display: flex; align-items: center; gap: 12px; }
     .logo {
       width: 56px; height: 56px; border-radius: 14px;
-      padding: 6px;
+      padding: 6px; /* dá um respiro para a logo aparecer inteira */
       background-color: rgba(255,255,255,0.06);
       background-image: linear-gradient(135deg, var(--accent), var(--accent-2));
       background-size: contain; background-position: center; background-repeat: no-repeat;
@@ -62,7 +61,7 @@
       margin-top: 6px;
     }
 
-    /* Caixa de Atualizações fixa + botão fechar */
+    /* Caixa de Atualizações fixa (sem cobrir o header) */
     .updates {
       position: fixed; top: 76px; right: 16px; width: 280px; z-index: 1000;
       background: rgba(255,255,255,0.06);
@@ -74,6 +73,12 @@
     .updates .item { font-size: 12px; color: var(--muted); line-height: 1.4; }
     .updates .close { cursor:pointer; border:none; background:transparent; color: var(--text); opacity:.7; font-size:14px; line-height:1; padding:2px 6px; border-radius:8px; }
     .updates .close:hover{opacity:1; background: rgba(255,255,255,0.08);}
+
+    /* Cookie bar */
+    .cookiebar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 1100; background: rgba(0,0,0,0.8); color: var(--text); padding: 12px 16px; display: none; }
+    .cookiebar .inner { max-width: 1100px; margin: 0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .cookiebar p { margin: 0; font-size: 12px; color: var(--muted); }
+    .cookiebar button { white-space: nowrap; }
   </style>
 </head>
 <body>
@@ -89,7 +94,7 @@
     <!-- Caixa de Atualizações (fixa) -->
     <aside class="updates" aria-label="Atualizações" id="updatesBox">
       <h3>Atualizações <button class="close" id="updatesClose" aria-label="Fechar">✕</button></h3>
-      <div class="item">v1.1 — Adicionamos a opção de entrada em R$ (preenche automaticamente o campo em %), incluímos o envio do resumo via WhatsApp para a Naval no final do site e realizamos alguns ajustes visuais.</div>
+      <div class="item">v1.1 — Adicionamos a opção de entrada em R$ (preenchemos automaticamente a outra opção) + ajustes visuais. Também incluímos o envio do resumo via WhatsApp para a Naval. Agora: sincronização R$→% reforçada + histórico com cookies.</div>
     </aside>
 
     <div class="grid">
@@ -148,12 +153,29 @@
         <h2>Resumo</h2>
         <div id="resumoFin" class="help">Preencha os campos para ver o resumo do financiamento.</div>
       </div>
+
+      <!-- Histórico -->
+      <div class="card" style="grid-column: 1 / -1;" id="histCard">
+        <h2>Histórico de Cálculos</h2>
+        <div id="histList" class="help">Nenhum cálculo salvo ainda.</div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+          <button id="limparHistorico">Limpar histórico</button>
+        </div>
+      </div>
     </div>
 
     <div class="footer">
       <button id="copiar">Copiar resultados</button>
       <button id="enviarWhatsapp">Enviar para Naval via WhatsApp</button>
       <button id="limpar" class="primary">Limpar</button>
+    </div>
+  </div>
+
+  <!-- Cookie consent bar -->
+  <div class="cookiebar" id="cookiebar">
+    <div class="inner">
+      <p>Usamos cookies para guardar seus cálculos localmente (sem login e sem servidor). Ao aceitar, salvaremos seu histórico neste dispositivo.</p>
+      <button id="aceitarCookies" class="primary">Aceitar cookies</button>
     </div>
   </div>
 
@@ -223,8 +245,8 @@ const PCT = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDi
 function toNumberFromBRL(text){
   if(!text) return 0;
   let s=String(text).trim();
-  s=s.replace(/[^0-9,\.]/g,'');
-  s=s.replace(/\./g,'');
+  s=s.replace(/[^0-9,\.]/g,''); // mantém dígitos, vírgula e ponto
+  s=s.replace(/\./g,'');        // remove todos os pontos (milhar)
   if(s.includes(',')){
     s=s.replace(/,([^,]*)$/, '.$1');
     s=s.replace(/,/g,'');
@@ -253,6 +275,7 @@ const valorTotalRecebido = el('valorTotalRecebido');
 const resumoBox = el('resumoFin');
 
 let lastEdited = 'percEntrada'; // default: assume % até o usuário digitar em R$
+let lastSignature = ''; // evita salvar duplicado
 
 function recalc(){
   const vl = toNumberFromBRL(valorLancha.value);
@@ -330,6 +353,13 @@ function recalc(){
       `a NX Boats recebe ${fmtBRL(totalRecebido)} (entrada + financiamento líquido de equalização).`;
     if (resumoBox) resumoBox.textContent = resumo;
   } catch(e){}
+
+  // Salva histórico se houver consentimento
+  maybeSaveHistory({
+    vl, entradaR, percEntrada: parseFloat(String(percEntrada.value).replace(',','.'))||0,
+    percFin, financiadoR, taxa, prazo, parcela, eq, subsidio, liquido, totalRecebido,
+    resumo: resumoBox?.textContent || ''
+  });
 }
 
 // === Interações ===
@@ -341,7 +371,13 @@ valorLancha.addEventListener('input', () => {
   valorLancha.value = BRL.format(num);
   recalc();
 });
-valorLancha.addEventListener('blur', ()=>{ const raw=toNumberFromBRL(valorLancha.value); valorLancha.value = raw?fmtBRL(raw):''; recalc(); });
+// Formata no blur + se já houver entrada em R$, recalcula %
+valorLancha.addEventListener('blur', ()=>{
+  const raw=toNumberFromBRL(valorLancha.value);
+  valorLancha.value = raw?fmtBRL(raw):'';
+  if (toNumberFromBRL(valorEntradaManual.value)>0){ lastEdited='valorEntrada'; }
+  recalc();
+});
 
 // Máscara de moeda para a entrada em R$
 valorEntradaManual.addEventListener('input', () => {
@@ -352,7 +388,12 @@ valorEntradaManual.addEventListener('input', () => {
   valorEntradaManual.value = BRL.format(num);
   recalc();
 });
-valorEntradaManual.addEventListener('blur', ()=>{ lastEdited='valorEntrada'; const raw=toNumberFromBRL(valorEntradaManual.value); valorEntradaManual.value = raw?fmtBRL(raw):''; recalc(); });
+valorEntradaManual.addEventListener('blur', ()=>{
+  lastEdited='valorEntrada';
+  const raw=toNumberFromBRL(valorEntradaManual.value);
+  valorEntradaManual.value = raw?fmtBRL(raw):'';
+  recalc();
+});
 
 // % entrada controla quando editado
 percEntrada.addEventListener('input', ()=>{ lastEdited='percEntrada'; recalc(); });
@@ -406,7 +447,7 @@ numParcelas.addEventListener('change', recalc);
 
 // Enviar via WhatsApp (Naval)
 (document.getElementById('enviarWhatsapp')||{}).onclick = async () => {
-  const resumo = resumoBox?.textContent || '';
+  const resumo = (document.getElementById('resumoFin')?.textContent) || '';
   try { await navigator.clipboard.writeText(resumo); } catch(e){}
   const phone = '5511916631101'; // +55 11 91663-1101
   const url = `https://wa.me/${phone}?text=${encodeURIComponent(resumo)}`;
@@ -438,9 +479,93 @@ numParcelas.addEventListener('change', recalc);
   if (box) box.style.display = 'none';
 };
 
+// ===== Cookies & Histórico =====
+function setCookie(name, value, days=365){
+  const d=new Date(); d.setTime(d.getTime()+days*24*60*60*1000);
+  document.cookie = `${name}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/`;
+}
+function getCookie(name){
+  return document.cookie.split('; ').reduce((a,c)=>{
+    const [k,...v]=c.split('=');
+    a[k]=decodeURIComponent(v.join('='));
+    return a;
+  },{})[name];
+}
+
+const COOKIE_CONSENT = 'nx_consent';
+const COOKIE_HISTORY = 'nx_hist'; // JSON compactado; mantemos até ~3500 chars
+const MAX_HISTORY = 20;
+
+function loadHistory(){
+  try {
+    const raw = getCookie(COOKIE_HISTORY) || '';
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch(e){ return []; }
+}
+function saveHistory(arr){
+  try {
+    let json = JSON.stringify(arr);
+    while (json.length > 3500 && arr.length > 1){ arr.shift(); json = JSON.stringify(arr); }
+    setCookie(COOKIE_HISTORY, json);
+  } catch(e){}
+}
+function renderHistory(){
+  const list = document.getElementById('histList');
+  const hist = loadHistory();
+  if (!hist.length){ list.textContent = 'Nenhum cálculo salvo ainda.'; return; }
+  const items = hist.map(h=>{
+    const d = new Date(h.ts || Date.now());
+    const dt = d.toLocaleString('pt-BR');
+    return `• ${dt} — Lancha: ${fmtBRL(h.vl)} | Entrada: ${fmtBRL(h.entradaR)} (${(h.percEntrada||0).toFixed(2).replace('.', ',')}%) | Prazo: ${h.prazo} | Taxa: ${String(h.taxa).replace('.', ',')}% | Parcela: ${fmtBRL(h.parcela)}`;
+  }).join('\n');
+  list.textContent = items;
+}
+function maybeSaveHistory(calc){
+  if (getCookie(COOKIE_CONSENT) !== '1') return; // só salva se aceitou cookies
+  if (!(calc.vl>0)) return;
+  const signature = [calc.vl, calc.entradaR, calc.taxa, calc.prazo, Math.round(calc.parcela*100)/100].join('|');
+  if (signature === lastSignature) return;
+  lastSignature = signature;
+  const hist = loadHistory();
+  hist.push({
+    ts: Date.now(),
+    vl: calc.vl,
+    entradaR: calc.entradaR,
+    percEntrada: calc.percEntrada,
+    percFin: calc.percFin,
+    financiadoR: calc.financiadoR,
+    taxa: calc.taxa,
+    prazo: calc.prazo,
+    parcela: calc.parcela,
+    eq: calc.eq,
+    subsidio: calc.subsidio,
+    liquido: calc.liquido,
+    totalRecebido: calc.totalRecebido
+  });
+  while (hist.length > MAX_HISTORY) hist.shift();
+  saveHistory(hist);
+  renderHistory();
+}
+
+// Banner de cookies
+(function initCookies(){
+  const bar = document.getElementById('cookiebar');
+  const btn = document.getElementById('aceitarCookies');
+  if (getCookie(COOKIE_CONSENT) === '1'){ bar.style.display='none'; renderHistory(); return; }
+  bar.style.display='block';
+  btn.addEventListener('click', ()=>{ setCookie(COOKIE_CONSENT,'1'); bar.style.display='none'; renderHistory(); });
+})();
+
+// Botão limpar histórico
+(document.getElementById('limparHistorico')||{}).onclick = ()=>{
+  setCookie(COOKIE_HISTORY, '[]');
+  renderHistory();
+};
+
 // Inicializa
 recalc();
+renderHistory();
   </script>
 </body>
 </html>
-
