@@ -71,14 +71,16 @@
     }
     .updates h3 { margin: 0 0 4px; font-size: 14px; letter-spacing: .2px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
     .updates .item { font-size: 12px; color: var(--muted); line-height: 1.4; }
-    .updates .close { cursor:pointer; border:none; background:transparent; color: var(--text); opacity:.7; font-size:14px; line-height:1; padding:2px 6px; border-radius:8px; }
-    .updates .close:hover{opacity:1; background: rgba(255,255,255,0.08);}
+.updates .close { cursor:pointer; border:none; background:transparent; color: var(--text); opacity:.7; font-size:14px; line-height:1; padding:2px 6px; border-radius:8px; }
+.updates .close:hover{opacity:1; background: rgba(255,255,255,0.08);} 
+      /* Ações na caixa de parâmetros */
+    .param-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
 
-    /* Cookie bar */
-    .cookiebar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 1100; background: rgba(0,0,0,0.8); color: var(--text); padding: 12px 16px; display: none; }
-    .cookiebar .inner { max-width: 1100px; margin: 0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .cookiebar p { margin: 0; font-size: 12px; color: var(--muted); }
-    .cookiebar button { white-space: nowrap; }
+    /* Histórico de cálculos (caixinhas) */
+    #histList { display: grid; grid-template-columns: 1fr; gap: 8px; white-space: pre-wrap; }
+    .hist-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 10px; }
+    .hist-item time { display:block; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .hist-item .text { font-size: 13px; line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -94,7 +96,7 @@
     <!-- Caixa de Atualizações (fixa) -->
     <aside class="updates" aria-label="Atualizações" id="updatesBox">
       <h3>Atualizações <button class="close" id="updatesClose" aria-label="Fechar">✕</button></h3>
-      <div class="item">v1.1 — Adicionamos a opção de entrada em R$ (preenchemos automaticamente a outra opção) + ajustes visuais. Também incluímos o envio do resumo via WhatsApp para a Naval. Agora: sincronização R$→% reforçada + histórico com cookies.</div>
+      <div class="item">v1.1 — Adicionamos a opção de entrada em R$ (preenchemos automaticamente a outra opção) + ajustes visuais. Também incluímos o envio do resumo via WhatsApp para a Naval.</div>
     </aside>
 
     <div class="grid">
@@ -127,13 +129,7 @@
           </select>
         </div>
 
-        <div class="field">
-          <label for="numParcelas">Número de Parcelas (meses)</label>
-          <select id="numParcelas">
-            <option>6</option><option>10</option><option>12</option><option>15</option><option>18</option><option>20</option><option>24</option><option>30</option><option>36</option><option>40</option><option>42</option>
-          </select>
-        </div>
-      </div>
+        $1<div class="param-actions"><button id="salvarResumo">Salvar cálculo</button></div></div>
 
       <!-- Resultados -->
       <div class="card">
@@ -153,7 +149,6 @@
         <h2>Resumo</h2>
         <div id="resumoFin" class="help">Preencha os campos para ver o resumo do financiamento.</div>
       </div>
-
       <!-- Histórico -->
       <div class="card" style="grid-column: 1 / -1;" id="histCard">
         <h2>Histórico de Cálculos</h2>
@@ -168,14 +163,6 @@
       <button id="copiar">Copiar resultados</button>
       <button id="enviarWhatsapp">Enviar para Naval via WhatsApp</button>
       <button id="limpar" class="primary">Limpar</button>
-    </div>
-  </div>
-
-  <!-- Cookie consent bar -->
-  <div class="cookiebar" id="cookiebar">
-    <div class="inner">
-      <p>Usamos cookies para guardar seus cálculos localmente (sem login e sem servidor). Ao aceitar, salvaremos seu histórico neste dispositivo.</p>
-      <button id="aceitarCookies" class="primary">Aceitar cookies</button>
     </div>
   </div>
 
@@ -274,8 +261,7 @@ const valorLiquido = el('valorLiquido');
 const valorTotalRecebido = el('valorTotalRecebido');
 const resumoBox = el('resumoFin');
 
-let lastEdited = 'percEntrada'; // default: assume % até o usuário digitar em R$
-let lastSignature = ''; // evita salvar duplicado
+let lastEdited = 'percEntrada'; // default
 
 function recalc(){
   const vl = toNumberFromBRL(valorLancha.value);
@@ -353,13 +339,6 @@ function recalc(){
       `a NX Boats recebe ${fmtBRL(totalRecebido)} (entrada + financiamento líquido de equalização).`;
     if (resumoBox) resumoBox.textContent = resumo;
   } catch(e){}
-
-  // Salva histórico se houver consentimento
-  maybeSaveHistory({
-    vl, entradaR, percEntrada: parseFloat(String(percEntrada.value).replace(',','.'))||0,
-    percFin, financiadoR, taxa, prazo, parcela, eq, subsidio, liquido, totalRecebido,
-    resumo: resumoBox?.textContent || ''
-  });
 }
 
 // === Interações ===
@@ -371,13 +350,7 @@ valorLancha.addEventListener('input', () => {
   valorLancha.value = BRL.format(num);
   recalc();
 });
-// Formata no blur + se já houver entrada em R$, recalcula %
-valorLancha.addEventListener('blur', ()=>{
-  const raw=toNumberFromBRL(valorLancha.value);
-  valorLancha.value = raw?fmtBRL(raw):'';
-  if (toNumberFromBRL(valorEntradaManual.value)>0){ lastEdited='valorEntrada'; }
-  recalc();
-});
+valorLancha.addEventListener('blur', ()=>{ const raw=toNumberFromBRL(valorLancha.value); valorLancha.value = raw?fmtBRL(raw):''; recalc(); });
 
 // Máscara de moeda para a entrada em R$
 valorEntradaManual.addEventListener('input', () => {
@@ -388,12 +361,7 @@ valorEntradaManual.addEventListener('input', () => {
   valorEntradaManual.value = BRL.format(num);
   recalc();
 });
-valorEntradaManual.addEventListener('blur', ()=>{
-  lastEdited='valorEntrada';
-  const raw=toNumberFromBRL(valorEntradaManual.value);
-  valorEntradaManual.value = raw?fmtBRL(raw):'';
-  recalc();
-});
+valorEntradaManual.addEventListener('blur', ()=>{ lastEdited='valorEntrada'; const raw=toNumberFromBRL(valorEntradaManual.value); valorEntradaManual.value = raw?fmtBRL(raw):''; recalc(); });
 
 // % entrada controla quando editado
 percEntrada.addEventListener('input', ()=>{ lastEdited='percEntrada'; recalc(); });
@@ -445,15 +413,6 @@ numParcelas.addEventListener('change', recalc);
   }
 };
 
-// Enviar via WhatsApp (Naval)
-(document.getElementById('enviarWhatsapp')||{}).onclick = async () => {
-  const resumo = (document.getElementById('resumoFin')?.textContent) || '';
-  try { await navigator.clipboard.writeText(resumo); } catch(e){}
-  const phone = '5511916631101'; // +55 11 91663-1101
-  const url = `https://wa.me/${phone}?text=${encodeURIComponent(resumo)}`;
-  window.open(url, '_blank');
-};
-
 // Limpar
 (document.getElementById('limpar')||{}).onclick = ()=>{
   valorLancha.value='';
@@ -473,99 +432,60 @@ numParcelas.addEventListener('change', recalc);
   }
 })();
 
+// Enviar via WhatsApp (Naval)
+(document.getElementById('enviarWhatsapp')||{}).onclick = async () => {
+  const resumo = (document.getElementById('resumoFin')?.textContent) || '';
+  try { await navigator.clipboard.writeText(resumo); } catch(e){}
+  const phone = '5511916631101'; // +55 11 91663-1101
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(resumo)}`;
+  window.open(url, '_blank');
+};
+
 // Fechar caixa de atualizações
 (document.getElementById('updatesClose')||{}).onclick = () => {
   const box = document.getElementById('updatesBox');
   if (box) box.style.display = 'none';
 };
 
-// ===== Cookies & Histórico =====
-function setCookie(name, value, days=365){
-  const d=new Date(); d.setTime(d.getTime()+days*24*60*60*1000);
-  document.cookie = `${name}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/`;
-}
-function getCookie(name){
-  return document.cookie.split('; ').reduce((a,c)=>{
-    const [k,...v]=c.split('=');
-    a[k]=decodeURIComponent(v.join('='));
-    return a;
-  },{})[name];
-}
+// ===== Histórico via cookies (salva somente quando o usuário clicar) =====
+function setCookie(name, value, days=365){ const d=new Date(); d.setTime(d.getTime()+days*24*60*60*1000); document.cookie = `${name}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/`; }
+function getCookie(name){ return document.cookie.split('; ').reduce((a,c)=>{ const [k,...v]=c.split('='); a[k]=decodeURIComponent(v.join('=')); return a; },{})[name]; }
 
-const COOKIE_CONSENT = 'nx_consent';
-const COOKIE_HISTORY = 'nx_hist'; // JSON compactado; mantemos até ~3500 chars
+const COOKIE_HISTORY = 'nx_hist';
 const MAX_HISTORY = 20;
 
 function loadHistory(){
-  try {
-    const raw = getCookie(COOKIE_HISTORY) || '';
-    if (!raw) return [];
-    return JSON.parse(raw);
-  } catch(e){ return []; }
+  try { const raw = getCookie(COOKIE_HISTORY) || ''; return raw? JSON.parse(raw): []; } catch(e){ return []; }
 }
 function saveHistory(arr){
-  try {
-    let json = JSON.stringify(arr);
-    while (json.length > 3500 && arr.length > 1){ arr.shift(); json = JSON.stringify(arr); }
-    setCookie(COOKIE_HISTORY, json);
-  } catch(e){}
+  try { let json = JSON.stringify(arr); while (json.length > 3500 && arr.length>1){ arr.shift(); json = JSON.stringify(arr); } setCookie(COOKIE_HISTORY, json); } catch(e){}
 }
 function renderHistory(){
-  const list = document.getElementById('histList');
+  const wrap = document.getElementById('histList');
   const hist = loadHistory();
-  if (!hist.length){ list.textContent = 'Nenhum cálculo salvo ainda.'; return; }
-  const items = hist.map(h=>{
-    const d = new Date(h.ts || Date.now());
-    const dt = d.toLocaleString('pt-BR');
-    return `• ${dt} — Lancha: ${fmtBRL(h.vl)} | Entrada: ${fmtBRL(h.entradaR)} (${(h.percEntrada||0).toFixed(2).replace('.', ',')}%) | Prazo: ${h.prazo} | Taxa: ${String(h.taxa).replace('.', ',')}% | Parcela: ${fmtBRL(h.parcela)}`;
-  }).join('\n');
-  list.textContent = items;
+  if (!wrap) return;
+  if (!hist.length){ wrap.classList.add('help'); wrap.textContent = 'Nenhum cálculo salvo ainda.'; return; }
+  wrap.classList.remove('help');
+  wrap.innerHTML = hist.map(h=>{
+    const d = new Date(h.ts||Date.now()).toLocaleString('pt-BR');
+    return `<div class="hist-item"><time>${d}</time><div class="text">${(h.text||'').replace(/</g,'&lt;')}</div></div>`;
+  }).join('');
 }
-function maybeSaveHistory(calc){
-  if (getCookie(COOKIE_CONSENT) !== '1') return; // só salva se aceitou cookies
-  if (!(calc.vl>0)) return;
-  const signature = [calc.vl, calc.entradaR, calc.taxa, calc.prazo, Math.round(calc.parcela*100)/100].join('|');
-  if (signature === lastSignature) return;
-  lastSignature = signature;
+
+(document.getElementById('salvarResumo')||{}).onclick = ()=>{
+  const text = (document.getElementById('resumoFin')?.textContent||'').trim();
+  if (!text || /Preencha os campos/.test(text)) { alert('Preencha os parâmetros para gerar o resumo antes de salvar.'); return; }
   const hist = loadHistory();
-  hist.push({
-    ts: Date.now(),
-    vl: calc.vl,
-    entradaR: calc.entradaR,
-    percEntrada: calc.percEntrada,
-    percFin: calc.percFin,
-    financiadoR: calc.financiadoR,
-    taxa: calc.taxa,
-    prazo: calc.prazo,
-    parcela: calc.parcela,
-    eq: calc.eq,
-    subsidio: calc.subsidio,
-    liquido: calc.liquido,
-    totalRecebido: calc.totalRecebido
-  });
-  while (hist.length > MAX_HISTORY) hist.shift();
+  hist.push({ ts: Date.now(), text });
+  while (hist.length>MAX_HISTORY) hist.shift();
   saveHistory(hist);
-  renderHistory();
-}
-
-// Banner de cookies
-(function initCookies(){
-  const bar = document.getElementById('cookiebar');
-  const btn = document.getElementById('aceitarCookies');
-  if (getCookie(COOKIE_CONSENT) === '1'){ bar.style.display='none'; renderHistory(); return; }
-  bar.style.display='block';
-  btn.addEventListener('click', ()=>{ setCookie(COOKIE_CONSENT,'1'); bar.style.display='none'; renderHistory(); });
-})();
-
-// Botão limpar histórico
-(document.getElementById('limparHistorico')||{}).onclick = ()=>{
-  setCookie(COOKIE_HISTORY, '[]');
   renderHistory();
 };
 
+(document.getElementById('limparHistorico')||{}).onclick = ()=>{ setCookie(COOKIE_HISTORY,'[]'); renderHistory(); };
+
 // Inicializa
 recalc();
-renderHistory();
   </script>
 </body>
 </html>
