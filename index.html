@@ -72,10 +72,8 @@
     .updates .close { cursor:pointer; border:none; background:transparent; color: var(--text); opacity:.7; font-size:14px; line-height:1; padding:2px 6px; border-radius:8px; }
     .updates .close:hover{opacity:1; background: rgba(255,255,255,0.08);}
 
-    /* Botão de ação em Parâmetros */
     .param-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
 
-    /* Histórico em caixinhas */
     #histList { display: grid; grid-template-columns: 1fr; gap: 8px; white-space: pre-wrap; }
     .hist-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 10px; }
     .hist-item time { display:block; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
@@ -121,7 +119,9 @@
           <label for="taxaComercial">Taxa Comercial (% a.m.)</label>
           <select id="taxaComercial">
             <option value="0.00">0,00%</option>
+            <option value="0.69">0,69%</option>
             <option value="0.99">0,99%</option>
+            <option value="1.29">1,29%</option>
             <option value="1.39">1,39%</option>
             <option value="1.99" selected>1,99%</option>
           </select>
@@ -181,10 +181,84 @@ const LOGO_URL = 'https://i.imgur.com/9D2KFZo.png';
 
 // === TABELA (Taxa -> Prazo -> { equalizacao, fator }) ===
 const TABLE = {
-  "0.00": {"6":{equalizacao:0.0661130450017311,fator:0.169106},"10":{equalizacao:0.101271340480483,fator:0.102008},"12":{equalizacao:0.118180092231273,fator:0.085238},"15":{equalizacao:0.142741226735288,fator:0.068394},"18":{equalizacao:0.166376610459856,fator:0.057107},"20":{equalizacao:0.18163880422293702,fator:0.051447},"24":{equalizacao:0.2110262903899,fator:0.042936},"30":{equalizacao:0.252423947932931,fator:0.034399},"36":{equalizacao:0.290838207305738,fator:0.028693},"40":{equalizacao:0.314912098526916,fator:0.025836},"42":{equalizacao:0.326513927685167,fator:0.024611}},
-  "0.99": {"6":{equalizacao:0.0334882274589979,fator:0.175014},"10":{equalizacao:0.0516125603890935,fator:0.107644},"12":{equalizacao:0.0604103624074597,fator:0.090822},"15":{equalizacao:0.0732862426035454,fator:0.073935},"18":{equalizacao:0.0857871108872601,fator:0.062628},"20":{equalizacao:0.093918090215402,fator:0.056962},"24":{equalizacao:0.109707184125572,fator:0.048449},"30":{equalizacao:0.132254200840495,fator:0.039928},"36":{equalizacao:0.153506979583435,fator:0.034249},"40":{equalizacao:0.166993344274932,fator:0.031414},"42":{equalizacao:0.173539814299164,fator:0.030201}},
-  "1.39": {"6":{equalizacao:0.0201568575602853,fator:0.177428},"10":{equalizacao:0.0311412978252027,fator:0.109968},"12":{equalizacao:0.0364922537621693,fator:0.093134},"15":{equalizacao:0.0443457655299061,fator:0.076244},"18":{equalizacao:0.0519956174240499,fator:0.064943},"20":{equalizacao:0.0569844859492114,fator:0.059284},"24":{equalizacao:0.066701364072283,fator:0.05079},"30":{equalizacao:0.0806429282522513,fator:0.042303},"36":{equalizacao:0.0938527772803189,fator:0.036663},"40":{equalizacao:0.102268435706342,fator:0.033855},"42":{equalizacao:0.106362424033621,fator:0.032655}},
-  "1.99": {"6":{equalizacao:-0.0,fator:0.181078},"10":{equalizacao:-0.0,fator:0.113503},"12":{equalizacao:-0.0,fator:0.096661},"15":{equalizacao:0.0,fator:0.079782},"18":{equalizacao:-0.0,fator:0.068505},"20":{equalizacao:-0.0,fator:0.062866},"24":{equalizacao:-0.0,fator:0.05442},"30":{equalizacao:-0.0,fator:0.046014},"36":{equalizacao:-0.0,fator:0.04046},"40":{equalizacao:-0.0,fator:0.037712},"42":{equalizacao:-0.0,fator:0.036542}}
+  "0.00": {
+    "6": {equalizacao:0.0661130450017311,fator:0.169106},
+    "10":{equalizacao:0.101271340480483,fator:0.102008},
+    "12":{equalizacao:0.118180092231273,fator:0.085238},
+    "15":{equalizacao:0.142741226735288,fator:0.068394},
+    "18":{equalizacao:0.166376610459856,fator:0.057107},
+    "20":{equalizacao:0.18163880422293702,fator:0.051447},
+    "24":{equalizacao:0.2110262903899,fator:0.042936},
+    "30":{equalizacao:0.252423947932931,fator:0.034399},
+    "36":{equalizacao:0.290838207305738,fator:0.028693},
+    "40":{equalizacao:0.314912098526916,fator:0.025836},
+    "42":{equalizacao:0.326513927685167,fator:0.024611}
+  },
+  "0.69": {
+    "6": {equalizacao:0.04343,fator:0.173117},
+    "10":{equalizacao:0.06681,fator:0.105834},
+    "12":{equalizacao:0.07813,fator:0.089026},
+    "15":{equalizacao:0.09466,fator:0.072152},
+    "18":{equalizacao:0.11067,fator:0.060853},
+    "20":{equalizacao:0.12106,fator:0.055189},
+    "24":{equalizacao:0.14118,fator:0.046677},
+    "30":{equalizacao:0.16982,fator:0.038149},
+    "36":{equalizacao:0.19669,fator:0.032457},
+    "40":{equalizacao:0.21368,fator:0.029612},
+    "42":{equalizacao:0.22191,fator:0.028393}
+  },
+  "0.99": {
+    "6": {equalizacao:0.0334882274589979,fator:0.175014},
+    "10":{equalizacao:0.0516125603890935,fator:0.107644},
+    "12":{equalizacao:0.0604103624074597,fator:0.090822},
+    "15":{equalizacao:0.0732862426035454,fator:0.073935},
+    "18":{equalizacao:0.0857871108872601,fator:0.062628},
+    "20":{equalizacao:0.093918090215402,fator:0.056962},
+    "24":{equalizacao:0.109707184125572,fator:0.048449},
+    "30":{equalizacao:0.132254200840495,fator:0.039928},
+    "36":{equalizacao:0.153506979583435,fator:0.034249},
+    "40":{equalizacao:0.166993344274932,fator:0.031414},
+    "42":{equalizacao:0.173539814299164,fator:0.030201}
+  },
+  "1.29": {
+    "6": {equalizacao:0.0235,fator:0.176724},
+    "10":{equalizacao:0.03628,fator:0.109296},
+    "12":{equalizacao:0.0425,fator:0.092466},
+    "15":{equalizacao:0.05163,fator:0.075582},
+    "18":{equalizacao:0.06051,fator:0.064285},
+    "20":{equalizacao:0.0663,fator:0.058628},
+    "24":{equalizacao:0.07756,fator:0.050135},
+    "30":{equalizacao:0.09371,fator:0.041646},
+    "36":{equalizacao:0.10899,fator:0.036001},
+    "40":{equalizacao:0.11871,fator:0.033188},
+    "42":{equalizacao:0.12344,fator:0.031986}
+  },
+  "1.39": {
+    "6": {equalizacao:0.0201568575602853,fator:0.177428},
+    "10":{equalizacao:0.0311412978252027,fator:0.109968},
+    "12":{equalizacao:0.0364922537621693,fator:0.093134},
+    "15":{equalizacao:0.0443457655299061,fator:0.076244},
+    "18":{equalizacao:0.0519956174240499,fator:0.064943},
+    "20":{equalizacao:0.0569844859492114,fator:0.059284},
+    "24":{equalizacao:0.066701364072283,fator:0.05079},
+    "30":{equalizacao:0.0806429282522513,fator:0.042303},
+    "36":{equalizacao:0.0938527772803189,fator:0.036663},
+    "40":{equalizacao:0.102268435706342,fator:0.033855},
+    "42":{equalizacao:0.106362424033621,fator:0.032655}
+  },
+  "1.99": {
+    "6": {equalizacao:-0.0,fator:0.181078},
+    "10":{equalizacao:-0.0,fator:0.113503},
+    "12":{equalizacao:-0.0,fator:0.096661},
+    "15":{equalizacao:0.0,fator:0.079782},
+    "18":{equalizacao:-0.0,fator:0.068505},
+    "20":{equalizacao:-0.0,fator:0.062866},
+    "24":{equalizacao:-0.0,fator:0.05442},
+    "30":{equalizacao:-0.0,fator:0.046014},
+    "36":{equalizacao:-0.0,fator:0.04046},
+    "40":{equalizacao:-0.0,fator:0.037712},
+    "42":{equalizacao:-0.0,fator:0.036542}
+  }
 };
 
 // === Utils ===
@@ -220,7 +294,7 @@ const resumoBox = el('resumoFin');
 // Estado de edição para sincronização
 let lastEdited = 'percEntrada';
 
-// ===== Histórico local (cookies) — apenas quando clicar em Salvar =====
+// ===== Histórico local (cookies) =====
 function setCookie(name, value, days=365){
   const d=new Date(); d.setTime(d.getTime()+days*24*60*60*1000);
   document.cookie = `${name}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/`;
@@ -322,9 +396,10 @@ function recalc(){
 
   try {
     const taxaLabel = `${taxa.replace('.', ',')}% a.m.`;
+    const entradaPct = (vl>0)?(entradaR/vl*100):0;
     const resumo =
       `A lancha custa ${fmtBRL(vl)}. ` +
-      `A entrada é ${fmtBRL(entradaR)} (${((vl>0)?(entradaR/vl*100):0).toFixed(2).replace('.', ',')}%) ` +
+      `A entrada é ${fmtBRL(entradaR)} (${entradaPct.toFixed(2).replace('.', ',')}%) ` +
       `e o saldo a financiar é ${fmtBRL(financiadoR)} (${percFin.toFixed(2).replace('.', ',')}%). ` +
       `O financiamento tem taxa comercial ${taxaLabel} ` +
       `e será pago em ${prazo} parcelas de ${fmtBRL(parcela)}. ` +
@@ -396,7 +471,7 @@ numParcelas.addEventListener('change', recalc);
   recalc();
 };
 
-// Salvar cálculo (em caixinha no histórico)
+// Salvar cálculo (histórico)
 (document.getElementById('salvarResumo')||{}).onclick = ()=>{
   const text = (resumoBox?.textContent||'').trim();
   if (!text || /Preencha os campos/.test(text)) { alert('Preencha os parâmetros para gerar o resumo antes de salvar.'); return; }
@@ -413,7 +488,7 @@ numParcelas.addEventListener('change', recalc);
   renderHistory();
 };
 
-// Logo dinâmica + Atualizações fechar
+// Logo + updates
 (function initUI(){
   if (LOGO_URL) logoBox.style.backgroundImage = `url('${LOGO_URL}')`;
   (document.getElementById('updatesClose')||{}).onclick = () => {
@@ -428,4 +503,3 @@ renderHistory();
   </script>
 </body>
 </html>
-
