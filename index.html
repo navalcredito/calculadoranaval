@@ -1,913 +1,519 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DIB Crédito — Painel de Vendas</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#0b0d11;--s1:#12151c;--s2:#181c25;--s3:#1e2330;--bd:#2a2f3d;--tx:#e4e6ed;--tm:#7c8399;--th:#545a6e;--ac:#3b82f6;--acg:rgba(59,130,246,.12);--gn:#22c55e;--gng:rgba(34,197,94,.1);--yl:#eab308;--ylg:rgba(234,179,8,.1);--rd:#ef4444;--rdg:rgba(239,68,68,.1);--or:#f97316;--org:rgba(249,115,22,.1);--pp:#a855f7;--ppg:rgba(168,85,247,.1);--tl:#14b8a6;--tlg:rgba(20,184,166,.1)}
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}.app{display:flex;min-height:100vh}
-.side{width:260px;background:var(--s1);border-right:1px solid var(--bd);padding:20px 0;position:fixed;height:100vh;overflow-y:auto;z-index:11}
-.side-logo{padding:0 20px 20px;border-bottom:1px solid var(--bd);margin-bottom:12px}.side-logo h1{font-family:'Space Mono',monospace;font-size:13px;letter-spacing:2px;color:var(--ac);text-transform:uppercase}.side-logo p{font-size:11px;color:var(--tm);margin-top:4px}
-.ns{padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--th);margin-top:8px}
-.ni{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:13px;color:var(--tm);cursor:pointer;transition:all .15s;border-left:3px solid transparent}.ni:hover{background:var(--s2);color:var(--tx)}.ni.active{background:var(--acg);color:var(--ac);border-left-color:var(--ac);font-weight:500}
-.main{margin-left:260px;flex:1;min-height:100vh}
-.hd{padding:16px 32px;border-bottom:1px solid var(--bd);background:var(--s1);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}.hd h2{font-size:16px;font-weight:700}
-.bg{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:4px 12px;border-radius:20px;background:var(--gng);color:var(--gn)}
-.ct{padding:28px 32px}
-.grid{display:grid;gap:16px;margin-bottom:28px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}.g4{grid-template-columns:1fr 1fr 1fr 1fr}
-.cd{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:20px;transition:.2s}.cd:hover{border-color:rgba(59,130,246,.25)}.cd.cl{cursor:pointer}.cd.cl:hover{border-color:var(--ac);transform:translateY(-1px)}.cd h3{font-size:18px;font-weight:700;margin-bottom:8px}.cd p{font-size:13px;color:var(--tm);line-height:1.6}
-.sb{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:18px;margin-bottom:14px;position:relative}.sb.hl{border-left:3px solid var(--ac)}.sb.wn{border-left:3px solid var(--yl)}.sb.ok{border-left:3px solid var(--gn)}.sb.er{border-left:3px solid var(--rd)}.sb.nf{border-left:3px solid var(--tl)}
-.sl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;display:inline-block;padding:2px 8px;border-radius:4px}
-.sl-b{background:var(--acg);color:var(--ac)}.sl-g{background:var(--gng);color:var(--gn)}.sl-y{background:var(--ylg);color:var(--yl)}.sl-r{background:var(--rdg);color:var(--rd)}.sl-o{background:var(--org);color:var(--or)}.sl-p{background:var(--ppg);color:var(--pp)}.sl-t{background:var(--tlg);color:var(--tl)}
-.st{font-size:14px;line-height:1.7;white-space:pre-wrap}.st em{color:var(--yl);font-style:normal}.st strong{color:var(--gn);font-weight:600}
-.sn{font-size:12px;color:var(--tm);margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)}
-.sc{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--tm);margin-bottom:16px}
-.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}.kpi{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:16px}.kpi .lb{font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}.kpi .vl{font-family:'Space Mono',monospace;font-size:22px;font-weight:700}
-.cp{position:absolute;top:12px;right:12px;padding:4px 10px;background:var(--s3);border:1px solid var(--bd);border-radius:6px;color:var(--tm);font-size:10px;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:.5px}.cp:hover{color:var(--tx);border-color:var(--ac)}
-.tabs{display:flex;gap:0;border-bottom:1px solid var(--bd);margin-bottom:20px;overflow-x:auto}.tab{padding:12px 18px;font-size:13px;color:var(--tm);cursor:pointer;border-bottom:2px solid transparent;font-family:inherit;background:none;border-top:none;border-left:none;border-right:none;white-space:nowrap}.tab:hover{color:var(--tx)}.tab.active{color:var(--ac);border-bottom-color:var(--ac);font-weight:500}
-.ac{background:var(--s2);border:1px solid var(--bd);border-radius:10px;margin-bottom:10px;overflow:hidden}.ac-h{padding:14px 18px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:500}.ac-h:hover{background:var(--s3)}.ac-b{padding:0 18px 16px;font-size:13px;color:var(--tm);line-height:1.7;display:none}.ac.open .ac-b{display:block}.ac-h::after{content:'▸';transition:.2s;font-size:12px;color:var(--th)}.ac.open .ac-h::after{transform:rotate(90deg)}
-.oc{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:.15s}.oc:hover{border-color:rgba(59,130,246,.3)}.oc.done{opacity:.45}.oc.done .ot{text-decoration:line-through}.ob{width:22px;height:22px;border-radius:50%;border:2px solid var(--bd);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:.15s}.oc.done .ob{background:var(--gn);border-color:var(--gn)}.oc.done .ob::after{content:'✓';font-size:11px;color:#fff}
-.on{min-width:28px;height:28px;border-radius:50%;background:var(--acg);color:var(--ac);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;flex-shrink:0}.on.red{background:var(--rdg);color:var(--rd)}.on.grn{background:var(--gng);color:var(--gn)}
-.ot{flex:1}.ot h4{font-size:14px;font-weight:700;margin-bottom:3px}.ot p{font-size:12px;color:var(--tm);line-height:1.5}
-.rb{padding:8px 16px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;color:var(--tm);font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px}.rb:hover{color:var(--tx);border-color:var(--rd)}
-.at{background:var(--s3);border-radius:8px;padding:10px 14px;margin-top:8px;font-size:12px;color:var(--tl);display:flex;align-items:flex-start;gap:8px}.at::before{content:'🎙';font-size:14px;flex-shrink:0}
-.crm{background:var(--ppg);border:1px solid rgba(168,85,247,.2);border-radius:8px;padding:10px 16px;font-size:12px;color:var(--pp);margin-bottom:16px;font-weight:500}
-.np{width:100%;min-height:100px;padding:14px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-size:13px;font-family:'DM Sans',sans-serif;resize:vertical;outline:none}.np:focus{border-color:var(--ac)}.np::placeholder{color:var(--th)}
-.uc{position:relative}.uc-l{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--ylg);color:var(--yl);padding:8px 20px;border-radius:8px;font-size:13px;font-weight:700;z-index:2;text-transform:uppercase;letter-spacing:1px;white-space:nowrap}.uc-c{pointer-events:none;opacity:.35;filter:blur(1px)}
-.mb{display:none;background:none;border:1px solid var(--bd);border-radius:8px;color:var(--tx);padding:6px 12px;font-size:18px;cursor:pointer;font-family:inherit;line-height:1}
-.so{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10}
-@media(max-width:900px){.side{display:none}.side.open{display:block;width:280px;position:fixed;top:0;left:0;height:100vh}.so.open{display:block}.main{margin-left:0}.mb{display:block}.g2,.g3{grid-template-columns:1fr}.g4{grid-template-columns:1fr 1fr}.kpi-strip{grid-template-columns:1fr 1fr}.ct{padding:20px 16px}.hd{padding:12px 16px}}
-.hidden{display:none}
-.notif-item:hover{background:var(--s2)}.notif-item.read{opacity:.5}
-.client-tabs{display:flex;gap:4px;flex-wrap:wrap}.client-tab{padding:5px 12px;background:var(--s2);border:1px solid var(--bd);border-radius:6px;font-size:12px;color:var(--tm);cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit;transition:.15s}.client-tab:hover{border-color:var(--ac)}.client-tab.active{background:var(--acg);border-color:var(--ac);color:var(--ac);font-weight:500}.client-tab .x{color:var(--th);font-size:14px;margin-left:2px}.client-tab .x:hover{color:var(--rd)}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NX Boats • Simulador de Financiamento</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #121a2b;
+      --muted: #8aa0c5;
+      --text: #f2f6ff;
+      --accent: #2dd4bf;
+      --accent-2: #60a5fa;
+      --danger: #f87171;
+      --ok: #34d399;
+      --radius: 16px;
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, 'Helvetica Neue', Arial;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; box-sizing: border-box; }
+    .header { position: relative; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 56px; height: 56px; border-radius: 14px;
+      padding: 6px;
+      background-color: rgba(255,255,255,0.06);
+      background-image: linear-gradient(135deg, var(--accent), var(--accent-2));
+      background-size: contain; background-position: center; background-repeat: no-repeat;
+      box-sizing: border-box;
+    }
+    .brand h1 { font-size: 20px; margin: 0; }
+    .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius); padding: 16px; box-sizing: border-box; }
+    .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; }
+    @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
+
+    .field { margin-bottom: 12px; }
+    label { display:block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    input, select { width: 100%; max-width: 100%; box-sizing: border-box; border-radius: 12px; padding: 10px; font-size: 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); }
+    input[type="text"], input[type="number"] { color: var(--text) !important; }
+    select, select option { color: var(--accent-2) !important; }
+    ::placeholder { color: rgba(255,255,255,0.6); }
+    input[readonly] { opacity: .9; background: rgba(255,255,255,0.05); color: var(--text); }
+
+    .footer { display:flex; gap:10px; justify-content:flex-end; padding-top: 12px; }
+    button { cursor: pointer; border-radius: 12px; padding: 10px 14px; font-weight: 600; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.08); color: var(--text); }
+    button.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; color: #fff; }
+    .help { color: var(--muted); font-size: 12px; }
+
+    #resumoFin {
+      font-size: 14px; line-height: 1.5; color: var(--text);
+      background: rgba(255,255,255,0.02);
+      border: 1px dashed rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 6px;
+    }
+
+    .updates {
+      position: fixed; top: 76px; right: 16px; width: 280px; z-index: 1000;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px; padding: 12px 12px 10px 12px; backdrop-filter: blur(6px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+    .updates h3 { margin: 0 0 4px; font-size: 14px; letter-spacing: .2px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .updates .item { font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .updates .close { cursor:pointer; border:none; background:transparent; color: var(--text); opacity:.7; font-size:14px; line-height:1; padding:2px 6px; border-radius:8px; }
+    .updates .close:hover{opacity:1; background: rgba(255,255,255,0.08);}
+
+    .param-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
+
+    #histList { display: grid; grid-template-columns: 1fr; gap: 8px; white-space: pre-wrap; }
+    .hist-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 10px; }
+    .hist-item time { display:block; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .hist-item .text { font-size: 13px; line-height: 1.4; }
+  </style>
 </head>
 <body>
-<div class="app">
-<div class="so" id="so" onclick="cm()"></div>
-<nav class="side" id="sv">
-<div class="side-logo"><h1>DIB Crédito</h1><p>Manual de Vendas — SPCRED</p></div>
-<div class="ns">Início</div>
-<div class="ni active" data-p="home">◉ Painel Principal</div>
-<div class="ns">Produto</div>
-<div class="ni" data-p="produto">◆ Conheça o Produto</div>
-<div class="ni" data-p="novo">▶ Novo Contrato</div>
-<div class="ni" data-p="refi">⟳ Quitação de Terc.</div>
-<div class="ns">Vendas</div>
-<div class="ni" data-p="scripts">◎ Mensagens por Canal</div>
-<div class="ni" data-p="cadencia">↻ Cadência e Fechamento</div>
-<div class="ni" data-p="objecoes">◇ Contorno de Objeções</div>
-<div class="ns">Ferramentas</div>
-<div class="ni" data-p="toolkit">⬡ Kit de Confiança</div>
-<div class="ni" data-p="notas">✎ Bloco de Notas</div>
-<div class="ni" data-p="checklist">☐ Checklist Diário</div>
-<div class="ni" data-p="neuro">◈ Técnicas de Vendas</div>
-<div class="ns">Você</div>
-<div class="ni" data-p="bemestar">♡ Bem-Estar</div>
-</nav>
-<div class="main">
-<div class="hd"><div style="display:flex;align-items:center;gap:12px"><button class="mb" onclick="om()">☰</button><h2 id="pt">Painel Principal</h2></div>
-<div style="display:flex;align-items:center;gap:12px">
-<span class="bg">Treinamento</span>
-<div style="position:relative">
-<button id="notifBtn" onclick="toggleNotif()" style="background:none;border:1px solid var(--bd);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:16px;color:var(--tx);position:relative;line-height:1">🔔<span id="notifBadge" style="position:absolute;top:-4px;right:-4px;background:var(--rd);color:#fff;font-size:9px;font-weight:700;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center">3</span></button>
-<div id="notifPanel" class="hidden" style="position:absolute;top:42px;right:0;width:320px;background:var(--s1);border:1px solid var(--bd);border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.4);z-index:20;overflow:hidden">
-<div style="padding:14px 16px;border-bottom:1px solid var(--bd);font-size:13px;font-weight:700">Novidades da Operação</div>
-<div class="notif-item" onclick="markRead(this)" style="padding:12px 16px;border-bottom:1px solid var(--bd);cursor:pointer;transition:.15s">
-<div style="display:flex;align-items:flex-start;gap:10px"><span style="font-size:16px">🎧</span><div><div style="font-size:13px;font-weight:500;margin-bottom:3px">Headsets disponíveis</div><div style="font-size:12px;color:var(--tm);line-height:1.4">Agora tem headset para os consultores não se incomodarem com o ambiente externo. Peça o seu!</div><div style="font-size:10px;color:var(--th);margin-top:4px">Hoje</div></div></div>
-</div>
-<div class="notif-item" onclick="markRead(this)" style="padding:12px 16px;border-bottom:1px solid var(--bd);cursor:pointer;transition:.15s">
-<div style="display:flex;align-items:flex-start;gap:10px"><span style="font-size:16px">💻</span><div><div style="font-size:13px;font-weight:500;margin-bottom:3px">Central de vendas pronta</div><div style="font-size:12px;color:var(--tm);line-height:1.4">Central de vendas montada para os consultores terem as ferramentas necessárias para vender. Aproveitem!</div><div style="font-size:10px;color:var(--th);margin-top:4px">Hoje</div></div></div>
-</div>
-<div class="notif-item" onclick="markRead(this)" style="padding:12px 16px;cursor:pointer;transition:.15s">
-<div style="display:flex;align-items:flex-start;gap:10px"><span style="font-size:16px">🎯</span><div><div style="font-size:13px;font-weight:500;margin-bottom:3px">Meta quase lá!</div><div style="font-size:12px;color:var(--tm);line-height:1.4">Falta muito pouco para alcançarmos a nossa meta desse mês. Bora fechar forte!</div><div style="font-size:10px;color:var(--th);margin-top:4px">Hoje</div></div></div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="ct">
-
-<!-- HOME -->
-<div class="page" id="page-home">
-<div class="kpi-strip">
-<div class="kpi"><div class="lb">Taxa SPCRED</div><div class="vl" style="color:var(--gn)">3,99%</div><div style="font-size:11px;color:var(--tm)">a.m. em 96x — menor do estado</div></div>
-<div class="kpi"><div class="lb">Margem Benefício</div><div class="vl" style="color:var(--ac)">15%</div><div style="font-size:11px;color:var(--tm)">separada dos 30% do consignado</div></div>
-<div class="kpi"><div class="lb">Saque Disponível</div><div class="vl" style="color:var(--or)">85%</div><div style="font-size:11px;color:var(--tm)">do limite na conta-salário</div></div>
-<div class="kpi"><div class="lb">Prazo</div><div class="vl">48 a 96x</div><div style="font-size:11px;color:var(--tm)">parcelas em folha</div></div>
-</div>
-<div class="sb wn" style="margin-bottom:24px">
-<span class="sl sl-y">Tabela de Taxas — Decore Isso</span>
-<div class="st" style="margin-top:8px">
-<strong>Prazo mínimo:</strong> 48 parcelas
-
-<em>48x a 95x</em> → Taxa de <strong style="color:var(--yl)">4,50% a.m.</strong> (novos cooperados)
-<em>96x</em> → Taxa de <strong>3,99% a.m.</strong> (menor do estado)
-
-Sempre que possível, direcione pra 96x — é onde temos a melhor taxa e o melhor argumento de venda.</div>
-</div>
-<div class="sc">Regra de Ouro</div>
-<div class="sb ok"><div class="st" style="font-size:16px;text-align:center;padding:12px 0">"Eu não mandei mensagem pra te vender nada. É que <strong>seu órgão liberou uma margem nova</strong> e achei que você gostaria de saber."
-
-A venda acontece quando o cliente sente que <strong>descobriu uma oportunidade</strong>.</div></div>
-<div class="crm">Lembre-se: atualize SEMPRE o CRM com o status da negociação.</div>
-<div class="sc" style="margin-top:16px">As Duas Operações — Clique para ir</div>
-<div class="grid g2">
-<div class="cd cl" style="border-left:3px solid var(--gn)" onclick="goTo('novo')"><h3 style="color:var(--gn)">Novo Contrato →</h3><p>Margem 100% livre. Associa à cooperativa, emite CCB, libera saque na conta.</p></div>
-<div class="cd cl" style="border-left:3px solid var(--or)" onclick="goTo('refi')"><h3 style="color:var(--or)">Quitação de Terceiros →</h3><p>Quitamos a dívida no outro banco e cedemos crédito a 3,99% + troco pro cliente.</p></div>
-</div>
-</div>
-
-<!-- PRODUTO -->
-<div class="page hidden" id="page-produto">
-<div class="sc">O Que É o Cartão Benefício</div>
-<div class="sb nf"><div class="st">NÃO é cartão de crédito. É uma linha de crédito com margem própria (15% do salário bruto), separada dos 30% do consignado.
-
-Servidor que esgotou o consignado AINDA TEM 15% livre. A SPCRED libera o <strong>saque de grande parte do limite</strong> direto na conta-salário, com parcelas em folha.</div></div>
-<div class="sc" style="margin-top:20px">Por Que Somos Diferentes</div>
-<div class="grid g2">
-<div class="cd"><h3 style="color:var(--gn)">Menor Taxa do Estado</h3><p>3,99% a.m. comprovado no ranking da SEFAZ. BMG cobra 5,13%, CDC Card 15,99%. Sempre mande o print do ranking.</p></div>
-<div class="cd"><h3 style="color:var(--ac)">Cooperativa</h3><p>O cliente participa da cooperativa. Não tem acionista lucrando. As sobras voltam pros cooperados.</p></div>
-<div class="cd"><h3 style="color:var(--pp)">Sem Cartão de Crédito</h3><p>NÃO emitimos cartão de crédito. NÃO tem rotativo. É saque direto pra conta-salário com desconto em folha.</p></div>
-<div class="cd"><h3 style="color:var(--tl)">Benefícios do Cooperado</h3><p>Farmácias, aluguel de carros, médico, viagens, cursos, sorteios mensais, assessoria jurídica.</p></div>
-</div>
-<div class="sc" style="margin-top:20px">Como Funciona a Margem</div>
-<div class="sb hl"><div class="st"><em>Consignado: 30%</em> do bruto → maioria já esgotou
-<em>Cartão Benefício: 15%</em> do bruto → margem SEPARADA
-
-<em>Exemplo:</em> Servidor ganha R$10.000
-→ Consignado: R$3.000 (comprometido)
-→ Benefício: R$1.500 (100% LIVRE)
-→ Pode liberar mais de R$21.000 em até 96x</div></div>
-<div class="sc" style="margin-top:20px">Sobre a Cooperativa (como falar)</div>
-<div class="sb wn"><span class="sl sl-y">Como apresentar os custos</span>
-<div class="st">Pra ter o cartão, o servidor precisa ser cooperado:
-• <em>R$10/mês</em> cota-parte (capitalização — resgata depois)
-• <em>R$40/mês</em> mensalidade (começa no 2º mês, pode cancelar)
-
-A mensalidade dá acesso a TODOS os benefícios. O 1º mês é grátis.
-
-<strong>Ordem certa:</strong> Primeiro mostre o valor do saque e a taxa. Só depois mencione a cooperativa. Foque nos benefícios, não no custo.
-
-<strong>Frase:</strong> "A mensalidade é R$40, mas te dá desconto em farmácia, médico, viagem, sorteio mensal... E os R$10 de capitalização você resgata no futuro."</div></div>
-</div>
-
-<!-- NOVO CONTRATO -->
-<div class="page hidden" id="page-novo">
-<div class="sc">Novo Contrato — Checklist</div>
-<div class="crm">Atualize o CRM a cada etapa.</div>
-<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
-<span style="font-size:12px;color:var(--tm)">Clientes em processo:</span>
-<div id="nc-clients" class="client-tabs"></div>
-<button onclick="addClient('nc')" style="padding:5px 12px;background:var(--s2);border:1px solid var(--bd);border-radius:6px;color:var(--tm);font-size:12px;cursor:pointer;font-family:inherit">+ Novo</button>
-</div>
-<button class="rb" onclick="resetC('nc')">Limpar etapas</button>
-<div id="nc">
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">1</div><div class="ob"></div><div class="ot"><h4>Qualificar</h4><p>Servidor estadual de SP? Verificar margem no portal.</p></div></div>
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">2</div><div class="ob"></div><div class="ot"><h4>Apresentar produto</h4><p>Margem separada de 15%. Enviar print margem + ranking SEFAZ (3,99%).</p></div></div>
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">3</div><div class="ob"></div><div class="ot"><h4>Montar proposta</h4><p>Simulador do CRM. Proposta formatada no WhatsApp. Sugerir não usar tudo.</p></div></div>
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">4</div><div class="ob"></div><div class="ot"><h4>Solicitar documentos</h4><p>Contra-cheque 3 meses, RG/CNH, Comprovante Residência. Protegidos pela LGPD.</p></div></div>
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">5</div><div class="ob"></div><div class="ot"><h4>Confirmar dados bancários</h4><p>Conta-salário do contra-cheque. O dinheiro cai nessa conta.</p></div></div>
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">6</div><div class="ob"></div><div class="ot"><h4>Enviar CCB pra assinatura</h4><p>Link da CCB. Validação de identidade + reconhecimento facial. Rápido e seguro.</p></div></div>
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">7</div><div class="ob"></div><div class="ot"><h4>Averbação e desembolso</h4><p>SPCRED averba. Dinheiro na conta em até 24h após assinatura.</p></div></div>
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on grn">8</div><div class="ob"></div><div class="ot"><h4>Pós-venda</h4><p>Confirmar recebimento. Entrega dos benefícios do cooperado em até 7 dias. Pedir indicação.</p></div></div>
-</div>
-</div>
-
-<!-- REFINANCIAMENTO -->
-<div class="page hidden" id="page-refi">
-<div class="sc">Quitação de Terceiros — Guia Completo</div>
-<div class="sb wn"><span class="sl sl-y">Operação de até 10 dias</span><div class="st">Exige transparência total com o cliente. Envie áudios explicando cada passo. Acompanhamento DIÁRIO. A confiança do cliente é tudo.</div></div>
-<div class="crm">Atualize o CRM a CADA etapa. Acompanhamento DIÁRIO com o cliente.</div>
-<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
-<span style="font-size:12px;color:var(--tm)">Clientes em processo:</span>
-<div id="rc-clients" class="client-tabs"></div>
-<button onclick="addClient('rc')" style="padding:5px 12px;background:var(--s2);border:1px solid var(--bd);border-radius:6px;color:var(--tm);font-size:12px;cursor:pointer;font-family:inherit">+ Novo</button>
-</div>
-<button class="rb" onclick="resetC('rc')">Limpar etapas</button>
-<div id="rc">
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">1</div><div class="ob"></div><div class="ot"><h4>Pedir autorização do cliente</h4><p>Vamos solicitar o boleto de quitação no banco atual dele.</p></div></div>
-<div class="at" style="margin:0 0 10px 40px"><strong>Áudio:</strong> "Olha [NOME], pra te trazer pra SPCRED com taxa menor, preciso pedir pro seu banco atual um boleto de quitação, tá? A gente faz isso direto com eles — nós sabemos lidar com esses bancos, eles costumam dificultar quando alguém quer sair. Gravamos a ligação como segurança."</div>
-
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">2</div><div class="ob"></div><div class="ot"><h4>Solicitar login/senha do portal</h4><p>Pedir credenciais. Explicar o motivo com transparência total.</p></div></div>
-<div class="at" style="margin:0 0 10px 40px"><strong>Áudio:</strong> "Sobre o login do portal, vou te explicar: preciso acompanhar quando o banco liberar sua margem. E também garantir que nenhuma outra instituição tente averbar algo no meio do processo. Algumas ficam marcando território, e preciso proteger você nesse período. Depois que tudo finalizar, devolvo o acesso tranquilamente."</div>
-
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">3</div><div class="ob"></div><div class="ot"><h4>Receber boleto de quitação</h4><p>Do cliente ou direto do banco (se autorizado).</p></div></div>
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on red">4</div><div class="ob"></div><div class="ot"><h4>VERIFICAR BOLETO (crítico)</h4><p>Titularidade? Modalidade? Beneficiário é o banco? Prazo? SE ALGO NÃO BATER = PARAR.</p></div></div>
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">5</div><div class="ob"></div><div class="ot"><h4>Preencher Termo de Recompra + CCB</h4><p>Termo com: credora anterior, nº contrato, saldo devedor, valor líquido ao cliente.</p></div></div>
-<div class="at" style="margin:0 0 10px 40px"><strong>Explique:</strong> "Vou te enviar dois documentos: a CCB (contrato) e o Termo de Recompra. O termo explica tudo: primeiro quitamos seu banco, esperamos liberar a margem, e aí deposita o troco na sua conta. Tá discriminado o valor da quitação e o que você recebe."</div>
-
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">6</div><div class="ob"></div><div class="ot"><h4>Cliente assina CCB + Termo</h4><p>Dinheiro NÃO cai agora. Primeiro quitamos o banco anterior.</p></div></div>
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">7</div><div class="ob"></div><div class="ot"><h4>SPCRED ainda NÃO desembolsa</h4><p>Próximo passo: quitar o banco anterior.</p></div></div>
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">8</div><div class="ob"></div><div class="ot"><h4>Mudar senha do portal (temporário)</h4><p>Proteger a margem durante o processo.</p></div></div>
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">9</div><div class="ob"></div><div class="ot"><h4>SPCRED paga o boleto de quitação</h4><p>A partir daqui ficamos no risco. O Termo nos protege juridicamente.</p></div></div>
-<div class="at" style="margin:0 0 10px 40px;color:var(--gn)"><strong>Avise o cliente:</strong> "Olha [NOME], acabamos de pagar o boleto do seu contrato anterior. Agora é aguardar o banco desaverbar — pode levar até 5 dias úteis. Vou te dar notícias todo dia, tá? Fica tranquilo."</div>
-
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">10</div><div class="ob"></div><div class="ot"><h4>Guardar comprovante</h4><p>SPCRED envia comprovante. GUARDAR — prova de desembolso parcial da CCB.</p></div></div>
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">11</div><div class="ob"></div><div class="ot"><h4>Acompanhar desaverbação (até 5 dias úteis)</h4><p>Verificar portal diariamente. Pode levar +1 dia pra constar. MANDE MENSAGEM TODO DIA.</p></div></div>
-<div class="at" style="margin:0 0 10px 40px"><strong>Mensagem diária:</strong> "Boa tarde [NOME]! Passando pra te atualizar: o banco ainda não liberou sua margem. Isso é normal, pode levar até 5 dias úteis. Tô de olho aqui pra você!"</div>
-
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">12</div><div class="ob"></div><div class="ot"><h4>Avisar SPCRED da desaverbação</h4><p>Margem livre no portal → avisar IMEDIATAMENTE pra averbar.</p></div></div>
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on grn">13</div><div class="ob"></div><div class="ot"><h4>SPCRED desembolsa o troco</h4><p>Valor residual cai na conta-salário do cliente.</p></div></div>
-<div class="at" style="margin:0 0 10px 40px;color:var(--gn)"><strong>Avise:</strong> "PARABÉNS [NOME]! Deu tudo certo! O troco já foi depositado na sua conta. Confere lá pra mim? Bem-vindo à SPCRED!"</div>
-
-<div class="oc" onclick="this.classList.toggle('done')"><div class="on">14</div><div class="ob"></div><div class="ot"><h4>Devolver senha do portal</h4><p>Restaurar acesso. Confirmar finalização. Pedir indicação.</p></div></div>
-</div>
-</div>
-
-<!-- SCRIPTS -->
-<div class="page hidden" id="page-scripts">
-<div class="tabs"><button class="tab active" onclick="sT(this,'s1')">WhatsApp Ativo</button><button class="tab" onclick="sT(this,'s2')">Ligação</button><button class="tab" onclick="sT(this,'s3')">Lead que Veio Até Nós</button></div>
-<div id="s1">
-<div class="sc">Disparo Ativo — Mensagens Curtas</div>
-<p style="font-size:13px;color:var(--tm);margin-bottom:16px">Abra a etapa que precisa. Combine mensagens com áudios pra soar natural.</p>
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span><span class="sl sl-g" style="margin-right:8px">1</span> Abertura (disparo automático)</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Olá, tudo bem? Somos da Cooperativa de Crédito SPCRED.
-
-Houve atualização nas margens do seu <strong>Cartão Benefício Consignado</strong>, vinculado ao órgão público que você presta serviços, disponibilizando mais limite de crédito pra você.
-
-Caso queira receber as informações atualizadas, responda SIM.
-Nosso CNPJ: 07.651.495/0001-68</div></div>
-<div class="sn">Essa mensagem gera curiosidade e já passa credibilidade com o CNPJ. O servidor pensa: "será que tenho limite que não sabia?" — e responde.</div>
-</div></div>
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span><span class="sl sl-b" style="margin-right:8px">2</span> Respondeu SIM — Assumir o atendimento</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Boa tarde <em>[NOME]</em>, tudo bem?
-
-Prazer, meu nome é <em>[SEU NOME]</em>, sou Consultora da SPCRED e vou realizar o seu atendimento.
-
-Antes de mais nada, deixa eu te explicar como funciona a margem do Cartão de Benefício.</div></div>
-<div class="at"><strong>Áudio (natural e acolhedor):</strong> "Oi [NOME], tudo bem com você? Prazer, aqui é a [SEU NOME] da SPCRED. Olha, vou te explicar como funciona essa margem nova. É bem simples e acho que vai te interessar bastante, porque é uma oportunidade que a maioria dos servidores ainda não conhece."</div>
-<div class="sn">Não pergunte se quer ouvir — já comece explicando. O lead já disse SIM, então vá direto.</div></div></div>
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span><span class="sl sl-t" style="margin-right:8px">3</span> Mostrar margem no portal</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Vou te mandar o print de como aparece suas margens no Portal do Consignado. Você mesmo pode conferir.
-
-Veja: consignado tá negativo, mas <strong>cartão benefício tá 100% livre</strong>.</div></div>
-<div class="sn">⟶ Envie o print da margem do portal + áudio explicando</div></div></div>
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span><span class="sl sl-g" style="margin-right:8px">4</span> Proposta + Taxa</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Parcelas de R$<em>[PARCELA]</em> no holerite, libero R$<em>[VALOR]</em> na sua conta em <em>[PARCELAS]</em>x.
-
-Minha dica: <strong>não pegue o limite todo</strong>. Vai que acontece uma emergência, né?
-
-A taxa é 3,99% a.m. — <strong>a menor do estado de SP</strong>. Olha o ranking da SEFAZ.</div></div>
-<div class="sn">⟶ Envie print do ranking SEFAZ</div></div></div>
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span><span class="sl sl-b" style="margin-right:8px">5</span> Kit de Confiança</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Nossos dados:
-Site: spcred.coop.br
-Instagram: @spcredcooperativa
-E-mail: sac&#64;spcred.coop.br
-CNPJ: 07.651.495/0001-68
-Verificados no Reclame Aqui ✓
-
-Não emitimos cartão de crédito e não te colocamos no rotativo.</div></div></div></div>
-</div>
-
-<div id="s2" class="hidden">
-<div class="sc">Ligação Ativa — Roteiro Completo</div>
-<div style="background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:16px">
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-<div><label style="font-size:11px;color:var(--tm);display:block;margin-bottom:4px">Nome do cliente</label><input id="tel-nome" type="text" placeholder="Ex: Maria" oninput="fillTel()" style="width:100%;padding:8px 12px;background:var(--s1);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-size:13px;font-family:inherit;outline:none"></div>
-<div><label style="font-size:11px;color:var(--tm);display:block;margin-bottom:4px">Nome do consultor</label><input id="tel-consultor" type="text" placeholder="Ex: Flávia" oninput="fillTel()" style="width:100%;padding:8px 12px;background:var(--s1);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-size:13px;font-family:inherit;outline:none"></div>
-<div><label style="font-size:11px;color:var(--tm);display:block;margin-bottom:4px">Valor do contrato</label><input id="tel-valor" type="text" placeholder="Ex: 21.976,48" oninput="fillTel()" style="width:100%;padding:8px 12px;background:var(--s1);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-size:13px;font-family:inherit;outline:none"></div>
-</div>
-<div style="font-size:10px;color:var(--th);margin-top:8px">Preencha e os scripts abaixo se atualizam sozinhos</div>
-</div>
-<p style="font-size:13px;color:var(--tm);margin-bottom:16px">Leia com calma. As palavras em <strong style="color:var(--yl)">DESTAQUE</strong> são pra enfatizar na fala. O tom é de alguém dando uma dica valiosa, não vendendo.</p>
-
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span><span class="sl sl-g" style="margin-right:8px">1</span> Abertura — Primeiros 20 segundos</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">"Boa tarde <em class="tf-n">[NOME]</em>, aqui é a <em class="tf-c">[SEU NOME]</em> da SPCRED, tudo bem?
-
-Prometo que não te liguei pra cobrar e <strong style="color:var(--yl)">NEM TE VENDER NADA</strong> — mas você já usou a sua margem do consignado público? Se já usou, essa ligação vai fazer sentido pra você, porque <strong style="color:var(--yl)">SEU ÓRGÃO LIBEROU UMA NOVA MARGEM</strong>.
-
-Mas se não usou ainda, tudo bem, desculpe o incômodo e irei retirar seu número da nossa base. Gostaria de ouvir sobre a sua nova margem?"</div>
-<div class="sn">Não espere um "sim" pra cada frase. Fale tudo de uma vez, com naturalidade, como quem tá contando uma novidade pra um amigo. Se ele disser que não tem interesse → agradeça com carinho e encerre. Se demonstrar interesse → continue.</div>
-</div></div></div>
-
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span><span class="sl sl-b" style="margin-right:8px">2</span> Se demonstrou interesse — Apresentar o produto</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">"Que bom! Olha, a gente trabalha exclusivamente com a margem consignada do cartão de benefício. <strong style="color:var(--yl)">SEM SOLICITAR DEPÓSITO ANTECIPADO</strong> e descontando direto da sua folha.
-
-Como se fosse o consignado tradicional mesmo, o dinheiro solicitado cai direto na sua conta-salário. Hoje você tem pré-aprovado R$<em class="tf-v">[VALOR]</em>, caso tenha interesse em acessar esse valor, posso te mandar uma proposta final no WhatsApp ou continuar por aqui mesmo, o que preferir."</div>
-<div class="sn">O ideal é migrar pro WhatsApp — lá você tem prints, proposta formatada e pode mandar áudios. Mas se ele quiser continuar no telefone, siga o fluxo.</div>
-</div></div></div>
-
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span><span class="sl sl-t" style="margin-right:8px">3</span> Se migrou pro WhatsApp — Educação + Confiança</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">"Boa tarde <em class="tf-n">[NOME]</em>, tudo bem?
-
-Prazer, meu nome é <em class="tf-c">[SEU NOME]</em>, sou Consultora da SPCRED e vou realizar o seu atendimento.
-
-Antes de mais nada, deixa eu te explicar como funciona a margem do Cartão de Benefício.
-
-Hoje a SPCRED consegue disponibilizar esse limite para os servidores do <em>[ÓRGÃO]</em> fazendo de forma similar ao consignado tradicional. Para ficar mais fácil o entendimento, vou compartilhar um print de como aparece as suas margens no Portal do Consignado (você mesmo pode confirmar o que estou falando, tá bom?)"</div>
-<div class="sn">⟶ Envie o print da margem do portal mostrando: consignado negativo e cartão benefício 100% livre.</div>
-</div></div></div>
-
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span><span class="sl sl-b" style="margin-right:8px">4</span> Explicar a margem + sugerir cautela</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">"Veja comigo, você tem duas margens disponíveis no portal, sendo a primeira estando atualmente com um saldo negativo. Mas a do cartão benefício está <strong style="color:var(--yl)">100% DISPONÍVEL</strong>. Notícia boa, né?
-
-O que eu sugiro pra você: <strong style="color:var(--yl)">NÃO PEGAR A MARGEM TODA</strong>, porque vai que acontece alguma emergência?"</div>
-<div class="sn">Essa dica de "não pegar tudo" é uma das armas mais fortes. O cliente percebe que você tá cuidando dele.</div>
-</div></div></div>
-
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span><span class="sl sl-g" style="margin-right:8px">5</span> Proposta + menor taxa</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">"Com parcelas de R$<em>[PARCELA]</em> sendo descontadas diretamente do seu holerite (igual o consignado tradicional), eu consigo liberar hoje na sua conta-salário R$<em class="tf-v">[VALOR]</em>. Serão debitadas <em>[PARCELAS]</em> parcelas, como no consignado tradicional.
-
-Como é um limite extra, a taxa costuma ser um pouco maior que o consignado tradicional, mas a SPCRED hoje tem <strong style="color:var(--yl)">A MENOR TAXA DO ESTADO</strong>, e não somos nós quem estamos dizendo. Se você checar no portal o comparativo de taxas (vou te mandar um print), você vai localizar o nosso nome e a taxa de 3,99% ao lado. Essa é a <strong style="color:var(--yl)">MENOR TAXA</strong> que conseguimos pra esse tipo de saque."</div>
-<div class="sn">⟶ Envie o print do ranking de taxas SEFAZ com SPCRED a 3,99%</div>
-</div></div></div>
-</div>
-
-<div id="s3" class="hidden">
-<div class="sc">Lead que Veio Até Nós</div>
-<div class="sb ok"><div class="st">Esse lead já quer. Responda rápido. Não precisa convencer — precisa facilitar.</div></div>
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span class="sl sl-g" style="margin-right:8px">Site</span> Formulário /emprestimo-ja</div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Olá <em>[NOME]</em>! Recebi sua solicitação pelo nosso site.
-
-Meu nome é <em>[SEU NOME]</em>, sou consultora da SPCRED. Já estou verificando seu limite e te passo os detalhes em instantes.</div></div>
-<div class="sn">Você já tem o CPF do formulário. Consulte e já envie print + proposta.</div></div></div>
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span class="sl sl-b" style="margin-right:8px">WhatsApp</span> Chegou perguntando</div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Olá <em>[NOME]</em>, tudo bem? Que bom ter você aqui!
-
-Meu nome é <em>[SEU NOME]</em>, sou consultora da SPCRED — cooperativa de crédito dos servidores públicos de São Paulo.
-
-Vou verificar agora mesmo o seu limite disponível. Poderia me informar o seu CPF para que eu consiga consultar? Fique tranquilo(a), seus dados são protegidos pela LGPD e utilizados apenas para essa consulta.</div></div></div></div>
-</div>
-</div>
-
-<!-- CADÊNCIA -->
-<div class="page hidden" id="page-cadencia">
-<div class="sc">Mensagens por Etapa da Negociação</div>
-<p style="font-size:13px;color:var(--tm);margin-bottom:16px">Clique na etapa certa do momento.</p>
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span class="sl sl-g" style="margin-right:8px">Docs</span> Pedir documentos</div><div class="ac-b"><div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Maravilha! Pra continuar preciso de alguns documentos seus. Fique tranquilo, protegidos pela LGPD.
-
-→ Contra-cheque dos últimos 3 meses
-→ RG/CNH
-→ Comprovante de Residência
-
-Com isso te envio o contrato e finalizamos hoje! O dinheiro será depositado na conta do seu contra-cheque.</div></div></div></div>
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span class="sl sl-b" style="margin-right:8px">Dados</span> Confirmar dados bancários</div><div class="ac-b"><div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Poderia confirmar seus dados bancários pro depósito? Preciso que seja a conta-salário do contra-cheque.</div></div></div></div>
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span class="sl sl-p" style="margin-right:8px">CCB</span> Enviar link de assinatura</div><div class="ac-b"><div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Segue seu link de assinatura: <em>{link}</em>
-
-Assim que assinar, o dinheiro cai na sua conta em até 24 horas. Vai pedir pra validar identidade e tirar uma selfie — é rápido. Se tiver dificuldade, me chama.</div></div>
-<div class="at"><strong>Áudio:</strong> "Olha [NOME], te mandei o link da assinatura. É pelo celular mesmo, bem tranquilo. Ele vai pedir pra confirmar seus dados e tirar uma selfie pro reconhecimento facial. É bem rápido e seguro. Se tiver qualquer dificuldade em alguma parte, me chama aqui que te ajudo com o maior prazer."</div></div></div>
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span class="sl sl-g" style="margin-right:8px">✓</span> Operação iniciada</div><div class="ac-b"><div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Iniciamos o processo do seu crédito! Vou te enviar o link pra assinatura, o prazo pra liberação conta a partir da assinatura. Levamos cerca de 24 horas. Qualquer dúvida, tô aqui!</div></div></div></div>
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span class="sl sl-y" style="margin-right:8px">⏰</span> Fim do dia — não enviou docs</div><div class="ac-b"><div class="sb wn" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Meu expediente encerra às 17h, mantive as condições pra você até esse horário. Vamos prosseguir?
-
-Vou precisar do seu contra-cheque pra iniciar. Me mandando hoje eu já começo e finalizo amanhã nas condições combinadas.</div></div></div></div>
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span class="sl sl-o" style="margin-right:8px">↻</span> Lead sumiu — retomar</div><div class="ac-b"><div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Oi <em>[NOME]</em>, tudo bem? Passando pra saber se ainda tem interesse naquela condição.
-
-As taxas que te passei são as menores do estado, mas podem mudar a qualquer momento. Se quiser garantir, é só avisar que retomo de onde paramos.</div></div></div></div>
-
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span class="sl sl-g" style="margin-right:8px">💰</span> Mostrar o troco restante</div><div class="ac-b"><div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Aí você pegando R$<em>[VALOR SAQUE]</em>, ainda fica um trocado aqui de R$<em>[VALOR RESTANTE]</em>, pra futuramente se precisar pode nos consultar novamente.
-
-E suas parcelas não vão ficar acima de R$<em>[PARCELA]</em>, para não te apertar. Esse é o formato que te sugiro hoje.
-
-Vamos nessa?</div></div>
-<div class="sn">Mostrar o restante disponível planta a semente pra um segundo negócio no futuro. A frase "pra não te apertar" reforça cuidado.</div></div></div>
-
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span class="sl sl-t" style="margin-right:8px">🏢</span> Oferecer atendimento presencial</div><div class="ac-b"><div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Também temos atendimento presencial na nossa cooperativa, pra trazer 100% de segurança e conforto pra você.
-
-Rua XV de Novembro 200, 20B — Centro, São Paulo/SP — CEP 01013-000</div></div>
-<div class="sn">Use quando o cliente demonstrar insegurança em fazer pelo WhatsApp. Se preferir presencial, agende horário.</div></div></div>
-
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span class="sl sl-b" style="margin-right:8px">📧</span> Cliente inseguro com docs no WhatsApp</div><div class="ac-b"><div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Caso não se sinta segura em compartilhar por aqui, pode enviar para o nosso e-mail: sac&#64;spcred.coop.br
-
-Perceba que ele possui o nosso domínio, e apenas cooperativas de crédito registradas pelo BACEN podem se apossar do ".coop.br".
-
-Mas posso também agendar sua ida na cooperativa sem nenhum problema.</div></div>
-<div class="sn">A dica do domínio .coop.br é poderosa — mostra que é regulado. Sempre ofereça alternativa presencial.</div></div></div>
-
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h"><span class="sl sl-g" style="margin-right:8px">✓</span> Pós-venda — Confirmar depósito + Indicação</div><div class="ac-b"><div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">O valor caiu certinho na sua conta?
-
-Poderia indicar nosso trabalho para seus colegas que possuírem interesse em acessar a margem do Cartão Benefício Consignado? Sua indicação nos ajuda muito.
-
-Além disso, vamos te enviar um e-mail com todos os benefícios que a SPCRED pode te oferecer.
-
-Foi um prazer te atender e sigo a disposição a todo momento!
-Outros canais de contato: sac&#64;spcred.coop.br</div></div></div></div>
-</div>
-
-<!-- OBJEÇÕES -->
-<div class="page hidden" id="page-objecoes">
-<div class="sc">Contorno de Objeções</div>
-<p style="font-size:13px;color:var(--tm);margin-bottom:16px">Clique pra abrir. Use o botão Copiar pra enviar direto no WhatsApp.</p>
-
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h">"É cartão de crédito? Não quero cartão." <span class="sl sl-r">Muito comum</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Entendo perfeitamente sua preocupação, <em>[NOME]</em>. E fico feliz que você perguntou, porque é importante esclarecer isso.
-
-A resposta é NÃO — nós não emitimos cartão de crédito e não te colocamos em nenhum rotativo. O que a gente faz é liberar o saque de uma parte do seu limite direto na sua conta-salário, com as parcelas descontadas em folha, igualzinho o consignado que você já conhece.
-
-A única diferença é que usa uma margem separada — a do cartão benefício — que provavelmente está livre no seu caso.</div></div></div></div>
-
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h">"A taxa de 3,99% é alta" <span class="sl sl-y">Comum</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Entendo, é natural comparar com o consignado tradicional que tem taxas um pouco menores. Mas preciso te explicar uma coisa importante: a margem do cartão benefício é uma margem ADICIONAL — ela existe justamente pra quem já esgotou o consignado.
-
-As taxas pra essa modalidade são um pouco maiores em todo o mercado, em qualquer banco. A questão é: dentro dessa modalidade, a SPCRED oferece a menor taxa de todo o estado de São Paulo — 3,99%. O segundo colocado já cobra 4,13%.
-
-Posso te mandar o print do ranking oficial da SEFAZ pra você ver com seus próprios olhos — não somos nós dizendo, é o próprio governo do estado.</div></div></div></div>
-
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h">"Nunca ouvi falar da SPCRED" <span class="sl sl-y">Comum</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">É compreensível, a gente não é banco grande que aparece na TV com propaganda. A SPCRED é uma cooperativa de crédito criada por e para os servidores públicos do Estado de São Paulo, fiscalizada pelo Banco Central do Brasil.
-
-Vou te mandar nossos dados pra você conferir com calma:
-
-Site: spcred.coop.br
-Instagram: @spcredcooperativa
-CNPJ: 07.651.495/0001-68
-
-Inclusive, perceba que nosso domínio é .coop.br — apenas cooperativas de crédito registradas pelo BACEN podem usar esse domínio. Isso já é uma garantia.
-
-Também estamos verificados no Reclame Aqui. Se quiser, dá uma olhada lá também — a gente faz questão de ser transparente.</div></div></div></div>
-
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h">"Vou pensar / Preciso falar em casa" <span class="sl sl-o">Frequente</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Faz total sentido, <em>[NOME]</em>. Decisão financeira a gente tem que pensar com calma mesmo.
-
-Vou te mandar agora o print do ranking de taxas oficial e os nossos dados (site, CNPJ, Instagram), pra facilitar caso queira mostrar pra alguém em casa. Assim fica mais fácil tomar uma decisão com segurança.
-
-Quando vocês estiverem prontos, é só me chamar aqui que eu monto a proposta certinha. Sem nenhuma pressa — o limite fica disponível enquanto a margem estiver livre.</div></div></div></div>
-
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h">"Já tenho proposta de outro banco" <span class="sl sl-b">Oportunidade</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Que bom que você está pesquisando, <em>[NOME]</em>! Isso mostra que você é uma pessoa cuidadosa com suas finanças.
-
-Olha, eu vou te enviar o ranking oficial de taxas da SEFAZ — é um documento público do governo do estado. Ali você consegue comparar a taxa que te ofereceram com a nossa, lado a lado. A SPCRED aparece com 3,99%, e você vai poder ver exatamente onde cada banco se posiciona.
-
-Assim você toma sua decisão com informação real, sem precisar confiar na palavra de ninguém. Se depois quiser que eu faça uma simulação nas mesmas condições, é só me chamar.</div></div></div></div>
-
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h">"Preciso pagar algo antes?" <span class="sl sl-r">Alerta</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">De jeito nenhum, <em>[NOME]</em>. A SPCRED NUNCA pede depósito antecipado, taxa de cadastro, ou qualquer tipo de pagamento antes de liberar o crédito.
-
-O funcionamento é bem simples: o dinheiro cai na SUA conta-salário e as parcelas são descontadas da SUA folha de pagamento. Nada mais.
-
-Inclusive, essa é uma dica importante: desconfie sempre de qualquer empresa que peça pagamento antes de liberar crédito. No consignado, isso não existe.</div></div></div></div>
-
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h">"Não quero me endividar mais" <span class="sl sl-g">Educação</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">Respeito muito essa posição, <em>[NOME]</em>, e inclusive concordo — ninguém deveria se endividar além do necessário. Por isso mesmo que sugeri que você não use a margem toda.
-
-Mas deixa eu te fazer uma pergunta: você tem alguma dívida com juros altos hoje? Tipo cartão de crédito, cheque especial, crédito pessoal? Porque se tiver, pode fazer muito sentido usar essa margem de 3,99% ao mês pra quitar essas dívidas que cobram 12%, 14%, 15% ao mês.
-
-É trocar dívida cara por dívida barata. Se quiser, a gente pode fazer essa conta juntos pra ver se faz sentido no seu caso.</div></div></div></div>
-
-<div class="ac" onclick="this.classList.toggle('open')"><div class="ac-h">"Tenho medo de assinar" <span class="sl sl-o">Confiança</span></div><div class="ac-b">
-<div class="sb hl" style="position:relative"><button class="cp" onclick="event.stopPropagation();cpB(this)">Copiar</button><div class="st">É completamente normal ter esse cuidado, <em>[NOME]</em>. E fico feliz que você leva isso a sério.
-
-O documento que você vai assinar se chama CCB (Cédula de Crédito Bancário) — é o contrato padrão utilizado por todo o mercado financeiro, regulado pelo Banco Central. Você vai conseguir ler tudo com calma antes de assinar, e qualquer dúvida pode me perguntar que te explico cada parte.
-
-A assinatura é digital, com reconhecimento facial — é segura, rastreável, e nada acontece sem a sua confirmação. Estou aqui do seu lado em cada etapa.</div></div></div></div>
-</div>
-
-<!-- TOOLKIT -->
-<div class="page hidden" id="page-toolkit">
-<div class="sc">Kit de Confiança</div>
-<div class="sb hl" style="position:relative"><button class="cp" onclick="cpB(this)">Copiar</button><div class="st">Site: spcred.coop.br
-Instagram: @spcredcooperativa
-E-mail: sac&#64;spcred.coop.br
-CNPJ: 07.651.495/0001-68
-Reclame Aqui: verificados ✓
-Fiscalizada pelo Banco Central</div></div>
-<div class="sc" style="margin-top:20px">Quando Enviar</div>
-<div class="grid g2">
-<div class="cd"><p><strong style="color:var(--gn)">Print da Margem</strong> — após explicar o produto</p></div>
-<div class="cd"><p><strong style="color:var(--ac)">Ranking de Taxas</strong> — junto com a proposta</p></div>
-<div class="cd"><p><strong style="color:var(--pp)">Dados da Empresa</strong> — quando desconfiar</p></div>
-<div class="cd"><p><strong style="color:var(--or)">Reclame Aqui</strong> — reforço final</p></div>
-</div>
-<div class="sc" style="margin-top:20px">Frases que Funcionam</div>
-<div class="grid g2">
-<div class="sb ok"><div class="st">"Não somos nós dizendo — é o ranking da SEFAZ."</div></div>
-<div class="sb ok"><div class="st">"Sugiro não pegar o limite todo."</div></div>
-<div class="sb ok"><div class="st">"Você mesmo pode confirmar no portal."</div></div>
-<div class="sb ok"><div class="st">"Não emitimos cartão de crédito."</div></div>
-</div>
-</div>
-
-<!-- NOTAS -->
-<div class="page hidden" id="page-notas">
-<div class="sc">Bloco de Notas</div>
-<p style="font-size:13px;color:var(--tm);margin-bottom:12px">Anote observações, pendências ou ideias. Salvo no computador.</p>
-<textarea class="np" id="n1" placeholder="Escreva sua anotação aqui..." style="min-height:100px"></textarea>
-<div style="display:flex;gap:8px;margin-top:10px">
-<button onclick="addNote()" style="padding:8px 20px;background:var(--acg);border:1px solid rgba(59,130,246,.3);border-radius:8px;color:var(--ac);font-size:13px;cursor:pointer;font-family:inherit;font-weight:500">Adicionar</button>
-<button class="rb" style="margin:0" onclick="if(confirm('Apagar todas as anotações?')){localStorage.removeItem('notesList');document.getElementById('notesList').innerHTML='';document.getElementById('n1').value=''}">Limpar tudo</button>
-</div>
-<div id="notesList" style="margin-top:16px"></div>
-</div>
-
-<!-- CHECKLIST -->
-<div class="page hidden" id="page-checklist">
-<div class="sc">Checklist Diário</div>
-<div class="uc"><div class="uc-l">Em construção — aguarde calibração</div><div class="uc-c">
-<div class="oc"><div class="ob"></div><div class="ot"><strong>08:30</strong> — Revisar negociações no CRM</div></div>
-<div class="oc"><div class="ob"></div><div class="ot"><strong>09:00</strong> — 20 disparos WhatsApp</div></div>
-<div class="oc"><div class="ob"></div><div class="ot"><strong>09:30</strong> — 10 ligações ativas</div></div>
-<div class="oc"><div class="ob"></div><div class="ot"><strong>10:00</strong> — Responder leads pendentes</div></div>
-<div class="oc"><div class="ob"></div><div class="ot"><strong>14:00</strong> — Segunda rodada de disparos</div></div>
-<div class="oc"><div class="ob"></div><div class="ot"><strong>16:30</strong> — Pós-venda e indicações</div></div>
-<div class="oc"><div class="ob"></div><div class="ot"><strong>17:00</strong> — Registrar números no CRM</div></div>
-</div></div>
-</div>
-
-<!-- NEURO -->
-<div class="page hidden" id="page-neuro">
-<div class="sc">Técnicas de Vendas</div>
-<div class="grid g2">
-<div class="cd" style="border-left:3px solid var(--yl)"><h3>Urgência Real</h3><p>"Essas condições são de hoje. As taxas podem mudar a qualquer momento." — Verdade. A taxa realmente pode mudar.</p></div>
-<div class="cd" style="border-left:3px solid var(--tl)"><h3>Prova Social</h3><p>"Já ajudamos centenas de servidores do TJ-SP" — Mencione o órgão do lead.</p></div>
-<div class="cd" style="border-left:3px solid var(--gn)"><h3>Conselho Contra Seu Interesse</h3><p>"Não pegue tudo" — Quando você aconselha contra a venda máxima, o cliente confia mais.</p></div>
-<div class="cd" style="border-left:3px solid var(--or)"><h3>Prova Externa</h3><p>"Não somos nós dizendo, é o ranking da SEFAZ" — Você vira quem mostra informação, não quem vende.</p></div>
-<div class="cd" style="border-left:3px solid var(--ac)"><h3>Autonomia</h3><p>"Confere no portal" — Cliente verifica sozinho. Elimina sensação de manipulação.</p></div>
-<div class="cd" style="border-left:3px solid var(--rd)"><h3>Venda pela Dor</h3><p>Não venda "crédito". Venda "a solução pra quando a margem acabou".</p></div>
-</div>
-<div class="sc" style="margin-top:24px">Os 5 Princípios da DIB</div>
-<div class="sb nf"><div class="st" style="font-size:15px"><strong>1. Eu não vendo, eu ajudo.</strong>
-Toda conversa começa com "não mandei mensagem pra vender".
-
-<strong>2. Eu provo, não prometo.</strong>
-Prints, ranking, CNPJ, Reclame Aqui. Tudo verificável.
-
-<strong>3. Eu oriento contra meu interesse.</strong>
-"Não pegue tudo." Gera confiança.
-
-<strong>4. Eu personalizo.</strong>
-Nome, órgão, margem DELE. Nunca genérico.
-
-<strong>5. Eu respeito o tempo.</strong>
-Se não quer, agradeço e saio.</div></div>
-</div>
-
-<!-- BEM-ESTAR -->
-<div class="page hidden" id="page-bemestar">
-<div class="sc">Seu Espaço de Bem-Estar</div>
-<div class="sb ok"><div class="st" style="font-size:15px;text-align:center">Vender é difícil. Ouvir "não" o dia inteiro é cansativo. Ser xingado por quem não pediu sua ligação dói. Perder uma venda quase fechada frustra.
-
-<strong>Isso tudo é normal.</strong> Faz parte. E não define quem você é.
-
-Esse espaço é pra você respirar, recalibrar e voltar mais forte.</div></div>
-
-<div class="sc" style="margin-top:24px">Respiração 4-7-8 (Acalmar em 60 segundos)</div>
-<div style="text-align:center;padding:30px 0">
-<div id="breathCircle" style="width:160px;height:160px;border-radius:50%;border:3px solid var(--tl);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;transition:all 1s ease">
-<span id="breathText" style="font-size:16px;font-weight:700;color:var(--tl)">Iniciar</span>
-</div>
-<button id="breathBtn" onclick="startBreath()" style="padding:10px 24px;background:var(--tlg);border:1px solid rgba(20,184,166,.3);border-radius:8px;color:var(--tl);font-size:14px;cursor:pointer;font-family:inherit;font-weight:500">Começar exercício</button>
-<p style="font-size:12px;color:var(--th);margin-top:12px">Inspire 4s → Segure 7s → Expire 8s (3 ciclos)</p>
-<div style="background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:12px 16px;margin-top:12px;font-size:12px;color:var(--tm);line-height:1.6">A Respiração 4-7-8, desenvolvida pelo <strong style="color:var(--tx)">Dr. Andrew Weil</strong>, é uma técnica de relaxamento que envolve inspirar pelo nariz (4s), segurar o ar (7s) e expirar pela boca (8s). Este método ativa o sistema nervoso parassimpático, reduzindo ansiedade, estresse e melhorando o sono. Recomenda-se repetir o ciclo 4 vezes.</div>
-</div>
-
-<div class="sc" style="margin-top:16px">Quando Te Xingarem no Telefone</div>
-<div class="grid g2">
-<div class="cd" style="border-left:3px solid var(--tl)"><h3>Não é pessoal</h3><p>A pessoa não te conhece. Ela tá irritada com a situação dela, não com você. Você ligou num momento ruim — só isso. Respire, agradeça, e passe pro próximo.</p></div>
-<div class="cd" style="border-left:3px solid var(--gn)"><h3>Cada "não" te aproxima do "sim"</h3><p>Se a taxa de conversão é 5%, você precisa de 20 "nãos" pra cada "sim". Cada rejeição é um passo mais perto do fechamento. É matemática, não falha pessoal.</p></div>
-</div>
-
-<div class="sc" style="margin-top:24px">Quando Perder Uma Venda Quase Fechada</div>
-<div class="grid g2">
-<div class="cd" style="border-left:3px solid var(--yl)"><h3>O que você controlou?</h3><p>Você apresentou bem? Mandou os prints? Contornou as objeções? Se sim, você fez seu trabalho. O resultado não depende só de você — depende da vida do cliente.</p></div>
-<div class="cd" style="border-left:3px solid var(--pp)"><h3>Não é a última oportunidade</h3><p>Se o lead não fechou hoje, ele pode fechar em 30 dias. Mande uma mensagem de retomada depois. Muita gente volta. A margem continua lá.</p></div>
-</div>
-
-<div class="sc" style="margin-top:24px">Lembretes do Dia</div>
-<div class="sb nf"><div class="st" style="font-size:14px">• Você vendeu R$500 mil em 45 dias. Isso não é sorte — é competência.
-• Nenhum banco grande tem a taxa que a gente tem. Você tá do lado certo.
-• O servidor que você ajuda hoje vai indicar você amanhã.
-• Beba água. Levante da cadeira. Olhe pela janela. Depois volte.
-• Uma venda perdida é uma lição. Uma venda fechada é uma conquista. As duas te fazem crescer.</div></div>
-
-<div class="sc" style="margin-top:24px">Desabafe Aqui (estilo chat — só você vê)</div>
-<div id="chatBox" style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:16px;max-height:300px;overflow-y:auto;margin-bottom:10px;min-height:120px"></div>
-<div style="display:flex;gap:8px">
-<input id="chatIn" type="text" placeholder="Escreva o que tá sentindo..." style="flex:1;padding:10px 14px;background:var(--s3);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:13px;font-family:inherit;outline:none" onkeydown="if(event.key==='Enter')sendChat()">
-<button onclick="sendChat()" style="padding:10px 18px;background:var(--acg);border:1px solid rgba(59,130,246,.3);border-radius:8px;color:var(--ac);font-size:13px;cursor:pointer;font-family:inherit;font-weight:500">Enviar</button>
-</div>
-<div style="display:flex;justify-content:space-between;margin-top:8px">
-<div style="font-size:11px;color:var(--th)">Salvo só no seu navegador. Ninguém tem acesso.</div>
-<button class="rb" style="margin:0;font-size:11px;padding:4px 10px" onclick="if(confirm('Apagar todo o histórico?')){localStorage.removeItem('chatHist');document.getElementById('chatBox').innerHTML=''}">Limpar chat</button>
-</div>
-
-<div class="sc" style="margin-top:28px">Desenhe Livre (pra desestressar)</div>
-<div style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:12px">
-<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
-<span style="font-size:11px;color:var(--th)">Cor:</span>
-<span class="clr" onclick="penColor='#3b82f6'" style="width:24px;height:24px;border-radius:50%;background:#3b82f6;cursor:pointer;display:inline-block"></span>
-<span class="clr" onclick="penColor='#22c55e'" style="width:24px;height:24px;border-radius:50%;background:#22c55e;cursor:pointer;display:inline-block"></span>
-<span class="clr" onclick="penColor='#ef4444'" style="width:24px;height:24px;border-radius:50%;background:#ef4444;cursor:pointer;display:inline-block"></span>
-<span class="clr" onclick="penColor='#eab308'" style="width:24px;height:24px;border-radius:50%;background:#eab308;cursor:pointer;display:inline-block"></span>
-<span class="clr" onclick="penColor='#a855f7'" style="width:24px;height:24px;border-radius:50%;background:#a855f7;cursor:pointer;display:inline-block"></span>
-<span class="clr" onclick="penColor='#e4e6ed'" style="width:24px;height:24px;border-radius:50%;background:#e4e6ed;cursor:pointer;display:inline-block"></span>
-<span style="font-size:11px;color:var(--th);margin-left:12px">Tamanho:</span>
-<input type="range" min="1" max="20" value="3" id="penSize" style="width:80px">
-<button id="eraserBtn" onclick="toggleEraser()" style="padding:4px 12px;background:var(--s3);border:1px solid var(--bd);border-radius:6px;color:var(--tm);font-size:11px;cursor:pointer;font-family:inherit;margin-left:8px">Borracha</button>
-<button onclick="var c=document.getElementById('drawCanvas').getContext('2d');c.clearRect(0,0,680,350)" style="margin-left:auto;padding:4px 12px;background:var(--s3);border:1px solid var(--bd);border-radius:6px;color:var(--tm);font-size:11px;cursor:pointer;font-family:inherit">Limpar tudo</button>
-</div>
-<canvas id="drawCanvas" width="680" height="350" style="width:100%;border-radius:8px;background:var(--s1);cursor:crosshair;touch-action:none"></canvas>
-</div>
-
-<div class="sc" style="margin-top:28px">Minigame — Estoure Apenas a Cor Certa</div>
-<div style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:12px;text-align:center">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
-<span style="font-size:12px;color:var(--tm)">Pontos: <strong id="bubScore" style="color:var(--gn)">0</strong></span>
-<span style="font-size:12px;color:var(--tm)">Nível: <strong id="bubLevel" style="color:var(--ac)">1</strong></span>
-<span style="font-size:12px;color:var(--tm)">Cor alvo: <span id="bubTarget" style="display:inline-block;width:18px;height:18px;border-radius:50%;vertical-align:middle;border:2px solid #fff"></span></span>
-<button onclick="startBubbles()" style="padding:6px 14px;background:var(--acg);border:1px solid rgba(59,130,246,.3);border-radius:6px;color:var(--ac);font-size:12px;cursor:pointer;font-family:inherit">Jogar / Reiniciar</button>
-</div>
-<div id="bubGameOver" class="hidden" style="padding:20px;font-size:16px;font-weight:700;color:var(--rd)">Game Over! Você clicou na cor errada. Pontuação: <span id="bubFinal">0</span></div>
-<canvas id="bubCanvas" width="680" height="300" style="width:100%;border-radius:8px;background:var(--s1);cursor:pointer"></canvas>
-</div>
-</div>
-
-</div></div></div>
-<script>
-function om(){document.getElementById('sv').classList.add('open');document.getElementById('so').classList.add('open')}
-function cm(){document.getElementById('sv').classList.remove('open');document.getElementById('so').classList.remove('open')}
-document.querySelectorAll('.ni').forEach(function(i){i.addEventListener('click',function(){document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active')});document.querySelectorAll('.page').forEach(function(p){p.classList.add('hidden')});i.classList.add('active');document.getElementById('page-'+i.dataset.p).classList.remove('hidden');document.getElementById('pt').textContent=i.textContent.trim();cm();window.scrollTo(0,0)})});
-function goTo(p){document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active');if(n.dataset.p===p)n.classList.add('active')});document.querySelectorAll('.page').forEach(function(pg){pg.classList.add('hidden')});document.getElementById('page-'+p).classList.remove('hidden');document.getElementById('pt').textContent=document.querySelector('[data-p="'+p+'"]').textContent.trim();window.scrollTo(0,0)}
-function sT(b,id){b.closest('.page').querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});b.classList.add('active');b.closest('.page').querySelectorAll('[id^="s"]').forEach(function(t){if(t.id.match(/^s\d$/))t.classList.add('hidden')});document.getElementById(id).classList.remove('hidden')}
-function resetC(id){document.getElementById(id).querySelectorAll('.oc').forEach(function(c){c.classList.remove('done')});var prefix=id;saveClientState(prefix)}
-function cpB(btn){var b=btn.closest('.sb');var t=b&&b.querySelector('.st');if(!t)return;navigator.clipboard.writeText(t.textContent).then(function(){btn.textContent='Copiado!';setTimeout(function(){btn.textContent='Copiar'},1500)})}
-function sN(id){try{localStorage.setItem(id,document.getElementById(id).value)}catch(e){}}
-function lN(id){try{var v=localStorage.getItem(id);if(v)document.getElementById(id).value=v}catch(e){}}
-
-// Notes list
-function addNote(){
-  var ta=document.getElementById('n1');var text=ta.value.trim();if(!text)return;
-  var notes=JSON.parse(localStorage.getItem('notesList')||'[]');
-  var now=new Date();var ts=now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  notes.unshift({text:text,time:ts});
-  localStorage.setItem('notesList',JSON.stringify(notes));
-  ta.value='';renderNotes();
-}
-function deleteNote(idx){
-  var notes=JSON.parse(localStorage.getItem('notesList')||'[]');
-  notes.splice(idx,1);localStorage.setItem('notesList',JSON.stringify(notes));renderNotes();
-}
-function renderNotes(){
-  var notes=JSON.parse(localStorage.getItem('notesList')||'[]');var el=document.getElementById('notesList');
-  if(!notes.length){el.innerHTML='<p style="font-size:12px;color:var(--th)">Nenhuma anotação ainda.</p>';return}
-  el.innerHTML=notes.map(function(n,i){return '<div style="background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div style="flex:1"><div style="font-size:13px;line-height:1.5;white-space:pre-wrap">'+n.text.replace(/</g,'&lt;')+'</div><div style="font-size:10px;color:var(--th);margin-top:6px">'+n.time+'</div></div><button onclick="deleteNote('+i+')" style="background:none;border:none;color:var(--th);cursor:pointer;font-size:16px;padding:0 4px;flex-shrink:0" title="Remover">×</button></div>'}).join('');
-}
-renderNotes();
-
-// Client tracking for operations (max 3, with per-client checklist state)
-var activeClient={nc:null,rc:null};
-
-function addClient(prefix){
-  var data=JSON.parse(localStorage.getItem(prefix+'_clients')||'{}');
-  if(Object.keys(data).length>=3){alert('Máximo de 3 clientes em processo ao mesmo tempo.');return}
-  var name=prompt('Nome do cliente:');if(!name||!name.trim())return;
-  name=name.trim();
-  if(data[name]){alert('Já existe um cliente com esse nome.');return}
-  var checks=document.getElementById(prefix).querySelectorAll('.oc');
-  var state=[];checks.forEach(function(){state.push(false)});
-  data[name]=state;
-  localStorage.setItem(prefix+'_clients',JSON.stringify(data));
-  activeClient[prefix]=name;
-  renderClientTabs(prefix);
-  loadClientState(prefix,name);
-}
-
-function removeClient(prefix,name){
-  if(confirm('Encerrar o processo de '+name+'?\n\nLembre-se de ATUALIZAR O CRM com o resultado final!')){
-    var data=JSON.parse(localStorage.getItem(prefix+'_clients')||'{}');
-    delete data[name];
-    localStorage.setItem(prefix+'_clients',JSON.stringify(data));
-    var keys=Object.keys(data);
-    activeClient[prefix]=keys.length?keys[0]:null;
-    renderClientTabs(prefix);
-    if(activeClient[prefix])loadClientState(prefix,activeClient[prefix]);
-    else resetC(prefix);
-    alert('Processo de '+name+' encerrado.\n\nAtualize o CRM com o resultado final da negociação.');
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <div class="logo" id="logoBox"></div>
+        <h1>NX Boats • Simulador de Financiamento</h1>
+      </div>
+      <div class="help">Calculadora FIDC NX</div>
+    </div>
+
+    <aside class="updates" aria-label="Atualizações" id="updatesBox">
+      <h3>Atualizações <button class="close" id="updatesClose" aria-label="Fechar">✕</button></h3>
+      <div class="item">v1.1 — Adicionamos a opção de entrada em R$ (preenche automaticamente o campo em %), incluímos o envio do resumo via WhatsApp para a Naval no final do site e realizamos alguns ajustes visuais. v1.2 — Salvar seu cálculo no histórico (cookies locais).</div>
+    </aside>
+
+    <div class="grid">
+      <!-- Parâmetros -->
+      <div class="card">
+        <h2>Parâmetros</h2>
+
+        <div class="field">
+          <label for="valorLancha">Valor da Lancha (R$)</label>
+          <input id="valorLancha" type="text" placeholder="R$ 0,00" />
+        </div>
+
+        <div class="field">
+          <label for="valorEntradaManual">Valor entrada (R$)</label>
+          <input id="valorEntradaManual" type="text" placeholder="R$ 0,00" />
+        </div>
+
+        <div class="field">
+          <label for="percEntrada">% Valor entrada (%)</label>
+          <input id="percEntrada" type="number" step="0.01" placeholder="Ex.: 30" />
+        </div>
+
+        <div class="field">
+          <label for="taxaComercial">Taxa Comercial (% a.m.)</label>
+          <select id="taxaComercial">
+            <option value="0.00">0,00%</option>
+            <option value="0.69">0,69%</option>
+            <option value="0.79">0,79%</option>
+            <option value="0.99">0,99%</option>
+            <option value="1.29">1,29%</option>
+            <option value="1.39">1,39%</option>
+            <option value="1.99" selected>1,99%</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="numParcelas">Número de Parcelas (meses)</label>
+          <select id="numParcelas">
+            <option>6</option><option>10</option><option>12</option><option>15</option><option>18</option><option>20</option><option>24</option><option>30</option><option>36</option><option>40</option><option>42</option>
+          </select>
+        </div>
+
+        <div class="param-actions">
+          <button id="salvarResumo">Salvar cálculo</button>
+        </div>
+      </div>
+
+      <!-- Resultados -->
+      <div class="card">
+        <h2>Resultados</h2>
+        <div class="field"><label>Valor entrada (R$)</label><input id="valorEntrada" readonly /></div>
+        <div class="field"><label>% Valor financiado (%)</label><input id="percFinanciado" readonly /></div>
+        <div class="field"><label>Valor financiado (R$)</label><input id="valorFinanciado" readonly /></div>
+        <div class="field"><label>Valor Parcela Mensal (R$/mês)</label><input id="parcelaMensal" readonly /></div>
+        <div class="field"><label>Equalização de Taxa (%)</label><input id="equalizacaoPerc" readonly /></div>
+        <div class="field"><label>Valor Subsidiado (R$)</label><input id="valorSubsidiado" readonly /></div>
+        <div class="field"><label>Valor Financiado líquido de Equalização (R$)</label><div id="valorLiquido">R$ 0,00</div></div>
+        <div class="field"><label>Valor Total Recebido (R$)</label><div id="valorTotalRecebido">R$ 0,00</div></div>
+      </div>
+
+      <!-- Resumo -->
+      <div class="card" style="grid-column: 1 / -1;">
+        <h2>Resumo</h2>
+        <div id="resumoFin" class="help">Preencha os campos para ver o resumo do financiamento.</div>
+      </div>
+
+      <!-- Histórico -->
+      <div class="card" style="grid-column: 1 / -1;" id="histCard">
+        <h2>Histórico de Cálculos</h2>
+        <div id="histList" class="help">Nenhum cálculo salvo ainda.</div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+          <button id="limparHistorico">Limpar histórico</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <button id="copiar">Copiar resultados</button>
+      <button id="enviarWhatsapp">Enviar para Naval via WhatsApp</button>
+      <button id="limpar" class="primary">Limpar</button>
+    </div>
+  </div>
+
+  <script>
+// ===== CONFIGURAÇÃO DA LOGO =====
+const LOGO_URL = 'https://i.imgur.com/9D2KFZo.png';
+
+// === TABELA (Taxa -> Prazo -> { equalizacao, fator }) ===
+const TABLE = {
+  "0.00": {
+    "6": {equalizacao:0.0661130450017311,fator:0.169106},
+    "10":{equalizacao:0.101271340480483,fator:0.102008},
+    "12":{equalizacao:0.118180092231273,fator:0.085238},
+    "15":{equalizacao:0.142741226735288,fator:0.068394},
+    "18":{equalizacao:0.166376610459856,fator:0.057107},
+    "20":{equalizacao:0.18163880422293702,fator:0.051447},
+    "24":{equalizacao:0.2110262903899,fator:0.042936},
+    "30":{equalizacao:0.252423947932931,fator:0.034399},
+    "36":{equalizacao:0.290838207305738,fator:0.028693},
+    "40":{equalizacao:0.314912098526916,fator:0.025836},
+    "42":{equalizacao:0.326513927685167,fator:0.024611}
+  },
+  "0.69": {
+    "6": {equalizacao:0.04343,fator:0.173117},
+    "10":{equalizacao:0.06681,fator:0.105834},
+    "12":{equalizacao:0.07813,fator:0.089026},
+    "15":{equalizacao:0.09466,fator:0.072152},
+    "18":{equalizacao:0.11067,fator:0.060853},
+    "20":{equalizacao:0.12106,fator:0.055189},
+    "24":{equalizacao:0.14118,fator:0.046677},
+    "30":{equalizacao:0.16982,fator:0.038149},
+    "36":{equalizacao:0.19669,fator:0.032457},
+    "40":{equalizacao:0.21368,fator:0.029612},
+    "42":{equalizacao:0.22191,fator:0.028393}
+  },
+  "0.79": {
+    "6": {equalizacao:0.04012,fator:0.173716},
+    "10":{equalizacao:0.06176,fator:0.106407},
+    "12":{equalizacao:0.07225,fator:0.089594},
+    "15":{equalizacao:0.08757,fator:0.072718},
+    "18":{equalizacao:0.10242,fator:0.061418},
+    "20":{equalizacao:0.11206,fator:0.055754},
+    "24":{equalizacao:0.13077,fator:0.047243},
+    "30":{equalizacao:0.15740,fator:0.038719},
+    "36":{equalizacao:0.18244,fator:0.033033},
+    "40":{equalizacao:0.19830,fator:0.030191},
+    "42":{equalizacao:0.20598,fator:0.028974}
+  },
+  "0.99": {
+    "6": {equalizacao:0.0334882274589979,fator:0.175014},
+    "10":{equalizacao:0.0516125603890935,fator:0.107644},
+    "12":{equalizacao:0.0604103624074597,fator:0.090822},
+    "15":{equalizacao:0.0732862426035454,fator:0.073935},
+    "18":{equalizacao:0.0857871108872601,fator:0.062628},
+    "20":{equalizacao:0.093918090215402,fator:0.056962},
+    "24":{equalizacao:0.109707184125572,fator:0.048449},
+    "30":{equalizacao:0.132254200840495,fator:0.039928},
+    "36":{equalizacao:0.153506979583435,fator:0.034249},
+    "40":{equalizacao:0.166993344274932,fator:0.031414},
+    "42":{equalizacao:0.173539814299164,fator:0.030201}
+  },
+  "1.29": {
+    "6": {equalizacao:0.0235,fator:0.176724},
+    "10":{equalizacao:0.03628,fator:0.109296},
+    "12":{equalizacao:0.0425,fator:0.092466},
+    "15":{equalizacao:0.05163,fator:0.075582},
+    "18":{equalizacao:0.06051,fator:0.064285},
+    "20":{equalizacao:0.0663,fator:0.058628},
+    "24":{equalizacao:0.07756,fator:0.050135},
+    "30":{equalizacao:0.09371,fator:0.041646},
+    "36":{equalizacao:0.10899,fator:0.036001},
+    "40":{equalizacao:0.11871,fator:0.033188},
+    "42":{equalizacao:0.12344,fator:0.031986}
+  },
+  "1.39": {
+    "6": {equalizacao:0.0201568575602853,fator:0.177428},
+    "10":{equalizacao:0.0311412978252027,fator:0.109968},
+    "12":{equalizacao:0.0364922537621693,fator:0.093134},
+    "15":{equalizacao:0.0443457655299061,fator:0.076244},
+    "18":{equalizacao:0.0519956174240499,fator:0.064943},
+    "20":{equalizacao:0.0569844859492114,fator:0.059284},
+    "24":{equalizacao:0.066701364072283,fator:0.05079},
+    "30":{equalizacao:0.0806429282522513,fator:0.042303},
+    "36":{equalizacao:0.0938527772803189,fator:0.036663},
+    "40":{equalizacao:0.102268435706342,fator:0.033855},
+    "42":{equalizacao:0.106362424033621,fator:0.032655}
+  },
+  "1.99": {
+    "6": {equalizacao:-0.0,fator:0.181078},
+    "10":{equalizacao:-0.0,fator:0.113503},
+    "12":{equalizacao:-0.0,fator:0.096661},
+    "15":{equalizacao:0.0,fator:0.079782},
+    "18":{equalizacao:-0.0,fator:0.068505},
+    "20":{equalizacao:-0.0,fator:0.062866},
+    "24":{equalizacao:-0.0,fator:0.05442},
+    "30":{equalizacao:-0.0,fator:0.046014},
+    "36":{equalizacao:-0.0,fator:0.04046},
+    "40":{equalizacao:-0.0,fator:0.037712},
+    "42":{equalizacao:-0.0,fator:0.036542}
   }
+};
+
+// === Utils ===
+const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const PCT = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 2 });
+function toNumberFromBRL(t){
+  if(!t) return 0;
+  let s=String(t).trim();
+  s=s.replace(/[^0-9,\.]/g,''); s=s.replace(/\./g,'');
+  if(s.includes(',')){ s=s.replace(/,([^,]*)$/, '.$1'); s=s.replace(/,/g,''); }
+  const v=parseFloat(s); return isNaN(v)?0:v;
+}
+function fmtBRL(n){ return BRL.format(n||0); }
+
+// === Elementos ===
+const el = (id)=>document.getElementById(id);
+const logoBox = el('logoBox');
+const valorLancha = el('valorLancha');
+const valorEntradaManual = el('valorEntradaManual');
+const percEntrada = el('percEntrada');
+const taxaComercial = el('taxaComercial');
+const numParcelas = el('numParcelas');
+const valorEntrada = el('valorEntrada');
+const percFinanciado = el('percFinanciado');
+const valorFinanciado = el('valorFinanciado');
+const parcelaMensal = el('parcelaMensal');
+const equalizacaoPerc = el('equalizacaoPerc');
+const valorSubsidiado = el('valorSubsidiado');
+const valorLiquido = el('valorLiquido');
+const valorTotalRecebido = el('valorTotalRecebido');
+const resumoBox = el('resumoFin');
+
+// Estado de edição para sincronização
+let lastEdited = 'percEntrada';
+
+// ===== Histórico local (cookies) =====
+function setCookie(name, value, days=365){
+  const d=new Date(); d.setTime(d.getTime()+days*24*60*60*1000);
+  document.cookie = `${name}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/`;
+}
+function getCookie(name){
+  return document.cookie.split('; ').reduce((a,c)=>{
+    const [k,...v]=c.split('=');
+    a[k]=decodeURIComponent(v.join('='));
+    return a;
+  },{})[name];
+}
+const COOKIE_HISTORY = 'nx_hist';
+const MAX_HISTORY = 20;
+
+function loadHistory(){
+  try { const raw = getCookie(COOKIE_HISTORY)||''; return raw? JSON.parse(raw): []; } catch(e){ return []; }
+}
+function saveHistory(arr){
+  try {
+    let json = JSON.stringify(arr);
+    while (json.length>3500 && arr.length>1){ arr.shift(); json = JSON.stringify(arr); }
+    setCookie(COOKIE_HISTORY, json);
+  } catch(e){}
+}
+function renderHistory(){
+  const wrap = document.getElementById('histList');
+  const hist = loadHistory();
+  if (!wrap) return;
+  if (!hist.length){ wrap.classList.add('help'); wrap.textContent='Nenhum cálculo salvo ainda.'; return; }
+  wrap.classList.remove('help');
+  wrap.innerHTML = hist.map(h=>{
+    const d = new Date(h.ts||Date.now()).toLocaleString('pt-BR');
+    return `<div class="hist-item"><time>${d}</time><div class="text">${(h.text||'').replace(/</g,'&lt;')}</div></div>`;
+  }).join('');
 }
 
-function switchClient(prefix,name){
-  saveClientState(prefix);
-  activeClient[prefix]=name;
-  renderClientTabs(prefix);
-  loadClientState(prefix,name);
-}
+// ===== Cálculo principal =====
+function recalc(){
+  const vl = toNumberFromBRL(valorLancha.value);
+  const pe = parseFloat(String(percEntrada.value).replace(',', '.')) || 0;
+  const veManual = toNumberFromBRL(valorEntradaManual.value);
+  const taxa = String(taxaComercial.value);
+  const prazo = parseInt(numParcelas.value,10);
 
-function saveClientState(prefix){
-  var name=activeClient[prefix];if(!name)return;
-  var data=JSON.parse(localStorage.getItem(prefix+'_clients')||'{}');
-  var checks=document.getElementById(prefix).querySelectorAll('.oc');
-  var state=[];checks.forEach(function(c){state.push(c.classList.contains('done'))});
-  data[name]=state;
-  localStorage.setItem(prefix+'_clients',JSON.stringify(data));
-}
-
-function loadClientState(prefix,name){
-  var data=JSON.parse(localStorage.getItem(prefix+'_clients')||'{}');
-  var state=data[name]||[];
-  var checks=document.getElementById(prefix).querySelectorAll('.oc');
-  checks.forEach(function(c,i){
-    if(state[i])c.classList.add('done');else c.classList.remove('done');
-  });
-}
-
-function renderClientTabs(prefix){
-  var data=JSON.parse(localStorage.getItem(prefix+'_clients')||'{}');
-  var container=document.getElementById(prefix+'-clients');
-  container.innerHTML='';
-  Object.keys(data).forEach(function(name){
-    var isActive=activeClient[prefix]===name;
-    var tab=document.createElement('button');
-    tab.className='client-tab'+(isActive?' active':'');
-    tab.innerHTML=name+'<span class="x" onclick="event.stopPropagation();removeClient(\''+prefix+'\',\''+name.replace(/'/g,"\\'")+'\')">×</span>';
-    tab.onclick=function(e){if(e.target.classList.contains('x'))return;switchClient(prefix,name)};
-    container.appendChild(tab);
-  });
-}
-
-// Auto-save on check toggle
-document.querySelectorAll('#nc .oc, #rc .oc').forEach(function(el){
-  el.addEventListener('click',function(){
-    var prefix=this.closest('#nc')?'nc':'rc';
-    setTimeout(function(){saveClientState(prefix)},50);
-  });
-});
-
-// Migrate old format (array) to new (object) if needed
-function migrateClients(prefix){
-  try{
-    var raw=localStorage.getItem(prefix+'_clients');
-    if(!raw)return;
-    var parsed=JSON.parse(raw);
-    if(Array.isArray(parsed)){localStorage.removeItem(prefix+'_clients')}
-  }catch(e){localStorage.removeItem(prefix+'_clients')}
-}
-migrateClients('nc');migrateClients('rc');
-
-// Init clients
-renderClientTabs('nc');renderClientTabs('rc');
-var ncData=JSON.parse(localStorage.getItem('nc_clients')||'{}');
-var ncKeys=Object.keys(ncData);if(ncKeys.length){activeClient.nc=ncKeys[0];loadClientState('nc',ncKeys[0])}
-var rcData=JSON.parse(localStorage.getItem('rc_clients')||'{}');
-var rcKeys=Object.keys(rcData);if(rcKeys.length){activeClient.rc=rcKeys[0];loadClientState('rc',rcKeys[0])}
-
-// Notifications — persist read state
-function toggleNotif(){document.getElementById('notifPanel').classList.toggle('hidden')}
-document.addEventListener('click',function(e){if(!e.target.closest('#notifBtn')&&!e.target.closest('#notifPanel'))document.getElementById('notifPanel').classList.add('hidden')});
-function markRead(el){
-  var idx=Array.from(el.parentElement.children).filter(function(c){return c.classList.contains('notif-item')}).indexOf(el);
-  el.classList.add('read');
-  var readList=JSON.parse(localStorage.getItem('notifRead')||'[]');
-  if(readList.indexOf(idx)===-1)readList.push(idx);
-  localStorage.setItem('notifRead',JSON.stringify(readList));
-  updateNotifBadge();
-}
-function updateNotifBadge(){
-  var unread=document.querySelectorAll('.notif-item:not(.read)').length;
-  var badge=document.getElementById('notifBadge');
-  badge.textContent=unread;badge.style.display=unread?'flex':'none';
-}
-// Restore read state on load
-(function(){
-  var readList=JSON.parse(localStorage.getItem('notifRead')||'[]');
-  var items=document.querySelectorAll('.notif-item');
-  readList.forEach(function(idx){if(items[idx])items[idx].classList.add('read')});
-  updateNotifBadge();
-})()
-
-// Phone script auto-fill
-function fillTel(){
-  var nome=document.getElementById('tel-nome').value.trim()||'[NOME]';
-  var cons=document.getElementById('tel-consultor').value.trim()||'[SEU NOME]';
-  var valor=document.getElementById('tel-valor').value.trim()||'[VALOR]';
-  document.querySelectorAll('#s2 .tf-n').forEach(function(el){el.textContent=nome});
-  document.querySelectorAll('#s2 .tf-c').forEach(function(el){el.textContent=cons});
-  document.querySelectorAll('#s2 .tf-v').forEach(function(el){el.textContent=valor});
-}
-
-// Breathing exercise
-var breathRunning=false;
-function startBreath(){
-  if(breathRunning)return;breathRunning=true;
-  var el=document.getElementById('breathCircle'),tx=document.getElementById('breathText'),btn=document.getElementById('breathBtn');
-  btn.textContent='Respirando...';btn.style.opacity='.5';
-  var steps=[{t:'Inspire...',d:4000,s:'scale(1.4)'},{t:'Segure...',d:7000,s:'scale(1.4)'},{t:'Expire...',d:8000,s:'scale(1)'}];
-  var cycle=0,maxCycles=3;
-  function doStep(si){
-    if(si>=steps.length){cycle++;if(cycle>=maxCycles){tx.textContent='Pronto!';el.style.transform='scale(1)';btn.textContent='Começar exercício';btn.style.opacity='1';breathRunning=false;return}si=0}
-    var s=steps[si];tx.textContent=s.t;el.style.transform=s.s;
-    setTimeout(function(){doStep(si+1)},s.d);
-  }
-  doStep(0);
-}
-
-// Chat desabafo
-function sendChat(){
-  var input=document.getElementById('chatIn');
-  var msg=input.value.trim();if(!msg)return;
-  input.value='';
-  var box=document.getElementById('chatBox');
-  var now=new Date();var time=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var bubble='<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><div style="background:var(--acg);border:1px solid rgba(59,130,246,.2);border-radius:12px 12px 4px 12px;padding:10px 14px;max-width:80%;font-size:13px;line-height:1.5"><span style="color:var(--tx)">'+msg.replace(/</g,'&lt;')+'</span><div style="font-size:10px;color:var(--th);margin-top:4px;text-align:right">'+time+'</div></div></div>';
-  box.innerHTML+=bubble;box.scrollTop=box.scrollHeight;
-  // Save
-  try{var h=localStorage.getItem('chatHist')||'';localStorage.setItem('chatHist',h+bubble)}catch(e){}
-  // Bot response after 1.5s
-  setTimeout(function(){
-    var chatCount=parseInt(localStorage.getItem('chatMsgCount')||'0')+1;
-    localStorage.setItem('chatMsgCount',chatCount.toString());
-    var low=msg.toLowerCase();
-    var r='';
-    // Context-aware responses
-    if(low.match(/xing|gritar|grosso|grosseir|educa|maltrat|ofend|babac/)){
-      var resps=['Que situação chata. Mas lembra: essa pessoa não te conhece. A raiva dela não é sobre você — é sobre a vida dela. Você tava fazendo seu trabalho.','Ninguém merece ser tratado assim. Respira fundo, toma uma água, e lembra que a próxima pessoa pode ser aquela que vai fechar com você e te agradecer.','Isso dói, eu sei. Mas pensa comigo: quantas pessoas você já ajudou que ficaram genuinamente agradecidas? Essas são as que importam.'];
-      r=resps[Math.floor(Math.random()*resps.length)];
-    }else if(low.match(/cans|exaust|esgot|não aguent|demais|sobrecarreg/)){
-      var resps=['Você tá se sentindo sobrecarregado(a), e isso é válido. Já parou hoje pra respirar? Tenta o exercício 4-7-8 aqui em cima — 60 segundos e já muda o estado.','Quando bate o cansaço assim, é sinal de que você tá se dedicando. Mas cuidar de você também é parte do trabalho. O que acha de dar uma pausa de 5 minutos agora?','Tá pesado, eu entendo. Uma coisa que ajuda: olha pra trás e vê o quanto você já vendeu. Você é capaz. Mas até os capazes precisam descansar.'];
-      r=resps[Math.floor(Math.random()*resps.length)];
-    }else if(low.match(/perd|não fechou|escapou|quase|desist|frustrad/)){
-      var resps=['Perder uma venda quase fechada é frustrante demais. Mas me diz: você fez o seu melhor? Mandou os prints, contornou as objeções? Se sim, você fez sua parte. O resultado nem sempre depende só de nós.','Essa dói, eu sei. Mas pensa: se ele não fechou hoje, pode fechar em 30 dias. A margem continua lá. Manda uma mensagem de retomada daqui umas semanas.','A venda que escapou ensina mais que a que fechou fácil. O que você faria diferente? Pensa nisso, ajusta, e a próxima vai ser sua.'];
-      r=resps[Math.floor(Math.random()*resps.length)];
-    }else if(low.match(/feliz|fechei|vendi|consegui|uhuu|boa|show|massa/)){
-      var resps=['ISSO AÍ! Você merece essa vitória! Cada venda é uma família que você ajudou a ter acesso a crédito justo. Celebra isso!','Parabéns! Esse resultado é fruto do seu esforço. Já pediu indicação pro cliente? Aproveita que ele tá feliz!','Que notícia boa! Anota o que funcionou nessa venda — o que você disse, como conduziu. Isso vira seu playbook pessoal.'];
-      r=resps[Math.floor(Math.random()*resps.length)];
-    }else if(low.match(/medo|insegur|não sei se consigo|duvid|será que/)){
-      var resps=['É normal sentir insegurança. Todo vendedor sente — inclusive os melhores. O que diferencia é continuar mesmo com o medo. E você tá aqui, continuando.','A dúvida faz parte. Mas olha os fatos: vocês venderam R$500 mil em 45 dias. Isso não é sorte, é competência. A sua competência.','Quando a insegurança bater, volta aqui no painel e relê os scripts. Ter o processo na mão dá segurança. Você sabe o que falar, sabe como ajudar.'];
-      r=resps[Math.floor(Math.random()*resps.length)];
-    }else{
-      var general=['Entendo. Tá tudo bem sentir isso. Quer me contar mais sobre o que aconteceu?','Obrigado por compartilhar. Às vezes só colocar pra fora já alivia. Como tá se sentindo agora?','Tô aqui pra te ouvir. O que mais tá pesando hoje?','Faz parte do processo. Cada dia é diferente, e amanhã pode ser o melhor dia de vendas da sua vida.','Lembra: você não tá sozinha nessa. A equipe toda passa pelas mesmas coisas. Forças!','Respira. Você fez o que podia hoje. Amanhã é um recomeço.','Me conta mais. O que aconteceu?','Isso vai passar. Você já superou coisas piores e saiu mais forte. Essa não vai ser diferente.'];
-      r=general[Math.floor(Math.random()*general.length)];
-    }
-    // Follow-up questions every 3 messages
-    if(chatCount%3===0){
-      var followups=['\n\nO que te faria se sentir melhor agora?','Quer fazer o exercício de respiração? Tá aqui em cima.','Se pudesse mudar uma coisa no seu dia hoje, o que seria?','O que te motivou a trabalhar com vendas? Lembra disso quando bater o cansaço.'];
-      r+=followups[Math.floor(Math.random()*followups.length)];
-    }
-    var rb='<div style="display:flex;justify-content:flex-start;margin-bottom:8px"><div style="background:var(--s3);border:1px solid var(--bd);border-radius:12px 12px 12px 4px;padding:10px 14px;max-width:80%;font-size:13px;line-height:1.5"><span style="color:var(--tl)">'+r+'</span><div style="font-size:10px;color:var(--th);margin-top:4px">DIB Care</div></div></div>';
-    box.innerHTML+=rb;box.scrollTop=box.scrollHeight;
-    try{var h=localStorage.getItem('chatHist')||'';localStorage.setItem('chatHist',h+rb)}catch(e){}
-  },1500);
-}
-// Load chat history
-try{var ch=localStorage.getItem('chatHist');if(ch)document.getElementById('chatBox').innerHTML=ch}catch(e){}
-
-// Drawing canvas
-var penColor='#3b82f6',drawing=false,erasing=false;
-var canvas=document.getElementById('drawCanvas'),ctx=canvas.getContext('2d');
-function toggleEraser(){erasing=!erasing;var btn=document.getElementById('eraserBtn');if(erasing){btn.style.background='var(--rdg)';btn.style.color='var(--rd)';btn.style.borderColor='var(--rd)';btn.textContent='Borracha ON'}else{btn.style.background='var(--s3)';btn.style.color='var(--tm)';btn.style.borderColor='var(--bd)';btn.textContent='Borracha'}}
-document.querySelectorAll('.clr').forEach(function(c){c.addEventListener('click',function(){erasing=false;var btn=document.getElementById('eraserBtn');btn.style.background='var(--s3)';btn.style.color='var(--tm)';btn.style.borderColor='var(--bd)';btn.textContent='Borracha'})});
-function getPos(e){var r=canvas.getBoundingClientRect();var x,y;if(e.touches){x=e.touches[0].clientX-r.left;y=e.touches[0].clientY-r.top}else{x=e.clientX-r.left;y=e.clientY-r.top}return{x:x*(680/r.width),y:y*(350/r.height)}}
-function drawAt(p){if(erasing){ctx.globalCompositeOperation='destination-out';ctx.lineWidth=parseInt(document.getElementById('penSize').value)*3}else{ctx.globalCompositeOperation='source-over';ctx.strokeStyle=penColor;ctx.lineWidth=document.getElementById('penSize').value}ctx.lineTo(p.x,p.y);ctx.lineCap='round';ctx.stroke()}
-canvas.addEventListener('mousedown',function(e){drawing=true;var p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)});
-canvas.addEventListener('mousemove',function(e){if(!drawing)return;drawAt(getPos(e))});
-canvas.addEventListener('mouseup',function(){drawing=false;ctx.globalCompositeOperation='source-over'});
-canvas.addEventListener('mouseleave',function(){drawing=false;ctx.globalCompositeOperation='source-over'});
-canvas.addEventListener('touchstart',function(e){e.preventDefault();drawing=true;var p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)},{passive:false});
-canvas.addEventListener('touchmove',function(e){e.preventDefault();if(!drawing)return;drawAt(getPos(e))},{passive:false});
-canvas.addEventListener('touchend',function(){drawing=false;ctx.globalCompositeOperation='source-over'});
-
-// Bubble pop game with color targeting
-var bubbles=[],bubScore=0,bubAnim=null,bubGameActive=false,bubTargetColor='',bubLevel=1,bubSpeed=0.5;
-var bubCan=document.getElementById('bubCanvas'),bubCtx=bubCan.getContext('2d');
-var colors=['#3b82f6','#22c55e','#a855f7','#f97316','#14b8a6','#ef4444','#eab308'];
-function startBubbles(){
-  bubbles=[];bubScore=0;bubLevel=1;bubSpeed=0.5;bubGameActive=true;
-  document.getElementById('bubScore').textContent='0';
-  document.getElementById('bubLevel').textContent='1';
-  document.getElementById('bubGameOver').classList.add('hidden');
-  bubTargetColor=colors[Math.floor(Math.random()*colors.length)];
-  document.getElementById('bubTarget').style.background=bubTargetColor;
-  if(bubAnim)cancelAnimationFrame(bubAnim);
-  spawnBubbles(15);
-  animBubbles();
-}
-function spawnBubbles(n){for(var i=0;i<n;i++){bubbles.push({x:Math.random()*640+20,y:300+Math.random()*50,r:Math.random()*18+14,c:colors[Math.floor(Math.random()*colors.length)],vy:-(bubSpeed+Math.random()*bubSpeed),vx:(Math.random()-0.5)*0.6,pop:false,popT:0})}}
-function animBubbles(){
-  if(!bubGameActive)return;
-  bubCtx.clearRect(0,0,680,300);
-  var alive=0;
-  bubbles.forEach(function(b){
-    if(b.pop){b.popT++;if(b.popT<10){bubCtx.beginPath();bubCtx.arc(b.x,b.y,b.r+b.popT*2,0,Math.PI*2);bubCtx.strokeStyle=b.c;bubCtx.globalAlpha=1-b.popT/10;bubCtx.lineWidth=2;bubCtx.stroke();bubCtx.globalAlpha=1}return}
-    alive++;b.y+=b.vy;b.x+=b.vx;
-    if(b.y<-b.r){b.y=310;b.x=Math.random()*640+20;b.c=colors[Math.floor(Math.random()*colors.length)]}
-    if(b.x<10||b.x>670)b.vx*=-1;
-    bubCtx.beginPath();bubCtx.arc(b.x,b.y,b.r,0,Math.PI*2);bubCtx.fillStyle=b.c;bubCtx.globalAlpha=0.7;bubCtx.fill();bubCtx.globalAlpha=0.3;bubCtx.beginPath();bubCtx.arc(b.x-b.r*0.3,b.y-b.r*0.3,b.r*0.2,0,Math.PI*2);bubCtx.fillStyle='#fff';bubCtx.fill();bubCtx.globalAlpha=1;
-  });
-  if(alive<6)spawnBubbles(4);
-  bubAnim=requestAnimationFrame(animBubbles);
-}
-bubCan.addEventListener('click',function(e){
-  if(!bubGameActive)return;
-  var r=bubCan.getBoundingClientRect();var mx=(e.clientX-r.left)*(680/r.width),my=(e.clientY-r.top)*(300/r.height);
-  for(var i=0;i<bubbles.length;i++){
-    var b=bubbles[i];if(b.pop)continue;
-    var d=Math.sqrt((b.x-mx)*(b.x-mx)+(b.y-my)*(b.y-my));
-    if(d<b.r+5){
-      if(b.c===bubTargetColor){
-        b.pop=true;b.popT=0;bubScore++;
-        document.getElementById('bubScore').textContent=bubScore;
-        if(bubScore%10===0){bubLevel++;bubSpeed+=0.3;document.getElementById('bubLevel').textContent=bubLevel;bubTargetColor=colors[Math.floor(Math.random()*colors.length)];document.getElementById('bubTarget').style.background=bubTargetColor}
-      }else{
-        bubGameActive=false;if(bubAnim)cancelAnimationFrame(bubAnim);
-        document.getElementById('bubGameOver').classList.remove('hidden');
-        document.getElementById('bubFinal').textContent=bubScore;
+  // Sincronização % <-> R$
+  let entradaR = 0;
+  if (vl > 0) {
+    if (lastEdited === 'valorEntrada' && veManual >= 0) {
+      entradaR = Math.min(veManual, vl);
+      const pct = (entradaR / vl) * 100;
+      if (!Number.isNaN(pct)) { percEntrada.value = pct.toFixed(2).replace('.', ','); }
+    } else {
+      const pct = Math.max(0, Math.min(100, pe));
+      entradaR = vl * (pct/100);
+      if (document.activeElement !== valorEntradaManual) {
+        valorEntradaManual.value = entradaR ? fmtBRL(entradaR) : '';
       }
-      break;
     }
+  } else {
+    entradaR = 0;
+    if (document.activeElement !== valorEntradaManual) valorEntradaManual.value = '';
   }
+
+  const percFin = vl > 0 ? Math.max(0, 100 - (entradaR / (vl||1)) * 100) : 0;
+  const financiadoR = Math.max(0, vl - entradaR);
+
+  valorEntrada.value = fmtBRL(entradaR);
+  percFinanciado.value = `${percFin.toFixed(2).replace('.', ',')}%`;
+  valorFinanciado.value = fmtBRL(financiadoR);
+
+  const row = (TABLE[taxa]||{})[prazo];
+  if (!row) {
+    parcelaMensal.value = '';
+    equalizacaoPerc.value = '';
+    valorSubsidiado.value = '';
+    valorLiquido.textContent = '—';
+    valorTotalRecebido.textContent = '—';
+    if (resumoBox) resumoBox.textContent = 'Preencha os campos para ver o resumo do financiamento.';
+    return;
+  }
+
+  const fator = Number(row.fator||0);
+  let eq = Number(row.equalizacao||0);
+  if (Math.abs(eq) < 1e-14) eq = 0;
+
+  const parcela = fator * financiadoR;
+  const subsidio = eq * financiadoR;
+  const liquido = Math.max(0, financiadoR - subsidio);
+  const totalRecebido = entradaR + liquido;
+
+  parcelaMensal.value = fmtBRL(parcela);
+  equalizacaoPerc.value = PCT.format(eq);
+  valorSubsidiado.value = fmtBRL(subsidio);
+  valorLiquido.textContent = fmtBRL(liquido);
+
+  const pctDelta = (vl > 0) ? ((totalRecebido - vl) / vl) : 0;
+  const pctLabel = new Intl.NumberFormat('pt-BR', { style:'percent', maximumFractionDigits: 2 }).format(pctDelta);
+  valorTotalRecebido.textContent = `${fmtBRL(totalRecebido)} (${pctLabel})`;
+
+  try {
+    const taxaLabel = `${taxa.replace('.', ',')}% a.m.`;
+    const entradaPct = (vl>0)?(entradaR/vl*100):0;
+    const resumo =
+      `A lancha custa ${fmtBRL(vl)}. ` +
+      `A entrada é ${fmtBRL(entradaR)} (${entradaPct.toFixed(2).replace('.', ',')}%) ` +
+      `e o saldo a financiar é ${fmtBRL(financiadoR)} (${percFin.toFixed(2).replace('.', ',')}%). ` +
+      `O financiamento tem taxa comercial ${taxaLabel} ` +
+      `e será pago em ${prazo} parcelas de ${fmtBRL(parcela)}. ` +
+      `Com equalização de ${PCT.format(eq)} (= ${fmtBRL(subsidio)}), ` +
+      `a NX Boats recebe ${fmtBRL(totalRecebido)} (entrada + financiamento líquido de equalização).`;
+    resumoBox.textContent = resumo;
+  } catch(e){}
+}
+
+// === Interações ===
+valorLancha.addEventListener('input', () => {
+  const digits = String(valorLancha.value).replace(/\D/g, '');
+  if (!digits) { valorLancha.value = ''; recalc(); return; }
+  const num = parseFloat(digits) / 100;
+  valorLancha.value = BRL.format(num);
+  recalc();
 });
-</script>
+valorLancha.addEventListener('blur', ()=>{
+  const raw=toNumberFromBRL(valorLancha.value);
+  valorLancha.value = raw?fmtBRL(raw):'';
+  if (toNumberFromBRL(valorEntradaManual.value)>0){ lastEdited='valorEntrada'; }
+  recalc();
+});
+
+valorEntradaManual.addEventListener('input', () => {
+  lastEdited = 'valorEntrada';
+  const digits = String(valorEntradaManual.value).replace(/\D/g, '');
+  if (!digits) { valorEntradaManual.value = ''; recalc(); return; }
+  const num = parseFloat(digits) / 100;
+  valorEntradaManual.value = BRL.format(num);
+  recalc();
+});
+valorEntradaManual.addEventListener('blur', ()=>{
+  lastEdited='valorEntrada';
+  const raw=toNumberFromBRL(valorEntradaManual.value);
+  valorEntradaManual.value = raw?fmtBRL(raw):'';
+  recalc();
+});
+
+percEntrada.addEventListener('input', ()=>{ lastEdited='percEntrada'; recalc(); });
+taxaComercial.addEventListener('change', recalc);
+numParcelas.addEventListener('change', recalc);
+
+// Copiar resultados
+(document.getElementById('copiar')||{}).onclick = async () => {
+  const resumo = resumoBox?.textContent || '';
+  try { await navigator.clipboard.writeText(resumo); alert('Resumo copiado.'); }
+  catch(e){ alert('Não foi possível copiar automaticamente — selecione e copie manualmente.'); }
+};
+
+// Enviar via WhatsApp (Naval)
+(document.getElementById('enviarWhatsapp')||{}).onclick = async () => {
+  const resumo = resumoBox?.textContent || '';
+  try { await navigator.clipboard.writeText(resumo); } catch(e){}
+  const phone = '5511916631101';
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(resumo)}`;
+  window.open(url, '_blank');
+};
+
+// Limpar parâmetros
+(document.getElementById('limpar')||{}).onclick = ()=>{
+  valorLancha.value='';
+  valorEntradaManual.value='';
+  percEntrada.value='';
+  taxaComercial.value='1.99';
+  numParcelas.value='6';
+  lastEdited='percEntrada';
+  resumoBox.textContent = 'Preencha os campos para ver o resumo do financiamento.';
+  recalc();
+};
+
+// Salvar cálculo (histórico)
+(document.getElementById('salvarResumo')||{}).onclick = ()=>{
+  const text = (resumoBox?.textContent||'').trim();
+  if (!text || /Preencha os campos/.test(text)) { alert('Preencha os parâmetros para gerar o resumo antes de salvar.'); return; }
+  const hist = loadHistory();
+  hist.push({ ts: Date.now(), text });
+  while (hist.length>MAX_HISTORY) hist.shift();
+  saveHistory(hist);
+  renderHistory();
+};
+
+// Limpar histórico
+(document.getElementById('limparHistorico')||{}).onclick = ()=>{
+  setCookie(COOKIE_HISTORY,'[]');
+  renderHistory();
+};
+
+// Logo + updates
+(function initUI(){
+  if (LOGO_URL) logoBox.style.backgroundImage = `url('${LOGO_URL}')`;
+  (document.getElementById('updatesClose')||{}).onclick = () => {
+    const box = document.getElementById('updatesBox');
+    if (box) box.style.display = 'none';
+  };
+})();
+
+// Inicializa
+recalc();
+renderHistory();
+  </script>
 </body>
 </html>
