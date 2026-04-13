@@ -74,6 +74,37 @@
 
     .param-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
 
+    .used-box {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .used-box h3 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      color: var(--text);
+    }
+    .used-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 640px) {
+      .used-grid { grid-template-columns: 1fr; }
+    }
+    #resultadoLanchaUsada {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px dashed rgba(255,255,255,0.12);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
     #histList { display: grid; grid-template-columns: 1fr; gap: 8px; white-space: pre-wrap; }
     .hist-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 10px; }
     .hist-item time { display:block; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
@@ -137,6 +168,40 @@
 
         <div class="param-actions">
           <button id="salvarResumo">Salvar cálculo</button>
+        </div>
+
+        <div class="used-box">
+          <h3>Descubra a parcela da lancha usada</h3>
+
+          <div class="used-grid">
+            <div class="field">
+              <label for="mesFabricacao">Mês de fabricação</label>
+              <select id="mesFabricacao">
+                <option value="">Selecione o mês</option>
+                <option value="1">Janeiro</option>
+                <option value="2">Fevereiro</option>
+                <option value="3">Março</option>
+                <option value="4">Abril</option>
+                <option value="5">Maio</option>
+                <option value="6">Junho</option>
+                <option value="7">Julho</option>
+                <option value="8">Agosto</option>
+                <option value="9">Setembro</option>
+                <option value="10">Outubro</option>
+                <option value="11">Novembro</option>
+                <option value="12">Dezembro</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="anoFabricacao">Ano de fabricação</label>
+              <input id="anoFabricacao" type="number" placeholder="Ex.: 2025" min="1900" max="9999" />
+            </div>
+          </div>
+
+          <div id="resultadoLanchaUsada" class="help">
+            Informe o mês e o ano de fabricação para descobrir o prazo máximo da operação.
+          </div>
         </div>
       </div>
 
@@ -304,6 +369,9 @@ const valorSubsidiado = el('valorSubsidiado');
 const valorLiquido = el('valorLiquido');
 const valorTotalRecebido = el('valorTotalRecebido');
 const resumoBox = el('resumoFin');
+const mesFabricacao = el('mesFabricacao');
+const anoFabricacao = el('anoFabricacao');
+const resultadoLanchaUsada = el('resultadoLanchaUsada');
 
 // Estado de edição para sincronização
 let lastEdited = 'percEntrada';
@@ -343,6 +411,54 @@ function renderHistory(){
     const d = new Date(h.ts||Date.now()).toLocaleString('pt-BR');
     return `<div class="hist-item"><time>${d}</time><div class="text">${(h.text||'').replace(/</g,'&lt;')}</div></div>`;
   }).join('');
+}
+
+// ===== Descobrir parcelas da lancha usada =====
+function calcularParcelasLanchaUsada(){
+  const mes = parseInt(mesFabricacao.value, 10);
+  const ano = parseInt(anoFabricacao.value, 10);
+
+  if (!mes || !ano) {
+    resultadoLanchaUsada.textContent = 'Informe o mês e o ano de fabricação para descobrir o prazo máximo da operação.';
+    resultadoLanchaUsada.className = 'help';
+    return;
+  }
+
+  if (mes < 1 || mes > 12 || ano < 1900 || ano > 9999) {
+    resultadoLanchaUsada.textContent = 'Data de fabricação inválida.';
+    resultadoLanchaUsada.className = 'help';
+    return;
+  }
+
+  const hoje = new Date();
+  const inicioMesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  const dataFabricacao = new Date(ano, mes - 1, 1);
+
+  if (dataFabricacao > inicioMesAtual) {
+    resultadoLanchaUsada.textContent = 'A data de fabricação não pode ser futura.';
+    resultadoLanchaUsada.className = 'help';
+    return;
+  }
+
+  // Limite máximo: 48 meses após a fabricação
+  const dataLimite = new Date(ano, (mes - 1) + 48, 1);
+
+  const mesesRestantes =
+    (dataLimite.getFullYear() - inicioMesAtual.getFullYear()) * 12 +
+    (dataLimite.getMonth() - inicioMesAtual.getMonth());
+
+  const prazoMaximo = Math.max(0, mesesRestantes);
+
+  if (prazoMaximo <= 0) {
+    resultadoLanchaUsada.innerHTML = 'Essa lancha já ultrapassou o limite de <strong>48 meses após a fabricação</strong> e não possui prazo disponível para financiamento.';
+    resultadoLanchaUsada.className = '';
+    return;
+  }
+
+  resultadoLanchaUsada.innerHTML =
+    `Prazo máximo da operação para essa lancha usada: <strong>${prazoMaximo} parcelas</strong>.<br>` +
+    `Regra aplicada: o financiamento não pode ultrapassar <strong>48 meses após a fabricação</strong>.`;
+  resultadoLanchaUsada.className = '';
 }
 
 // ===== Cálculo principal =====
@@ -456,6 +572,8 @@ valorEntradaManual.addEventListener('blur', ()=>{
 percEntrada.addEventListener('input', ()=>{ lastEdited='percEntrada'; recalc(); });
 taxaComercial.addEventListener('change', recalc);
 numParcelas.addEventListener('change', recalc);
+mesFabricacao.addEventListener('change', calcularParcelasLanchaUsada);
+anoFabricacao.addEventListener('input', calcularParcelasLanchaUsada);
 
 // Copiar resultados
 (document.getElementById('copiar')||{}).onclick = async () => {
@@ -480,8 +598,12 @@ numParcelas.addEventListener('change', recalc);
   percEntrada.value='';
   taxaComercial.value='1.99';
   numParcelas.value='6';
+  mesFabricacao.value='';
+  anoFabricacao.value='';
   lastEdited='percEntrada';
   resumoBox.textContent = 'Preencha os campos para ver o resumo do financiamento.';
+  resultadoLanchaUsada.textContent = 'Informe o mês e o ano de fabricação para descobrir o prazo máximo da operação.';
+  resultadoLanchaUsada.className = 'help';
   recalc();
 };
 
@@ -514,6 +636,7 @@ numParcelas.addEventListener('change', recalc);
 // Inicializa
 recalc();
 renderHistory();
+calcularParcelasLanchaUsada();
   </script>
 </body>
 </html>
