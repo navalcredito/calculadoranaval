@@ -94,12 +94,38 @@
     @media (max-width: 640px) {
       .used-grid { grid-template-columns: 1fr; }
     }
-    #resultadoLanchaUsada {
-      margin-top: 12px;
+    .used-info {
+      display: grid;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
       padding: 12px;
       border-radius: 12px;
       background: rgba(255,255,255,0.04);
-      border: 1px dashed rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .info-label {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .info-row strong {
+      color: var(--accent);
+      font-size: 15px;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .used-note {
+      margin: 2px 0 0 0;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(45,212,191,0.08);
+      border: 1px dashed rgba(45,212,191,0.28);
       color: var(--text);
       font-size: 14px;
       line-height: 1.45;
@@ -123,7 +149,7 @@
 
     <aside class="updates" aria-label="Atualizações" id="updatesBox">
       <h3>Atualizações <button class="close" id="updatesClose" aria-label="Fechar">✕</button></h3>
-      <div class="item">v1.1 — Adicionamos a opção de entrada em R$ (preenche automaticamente o campo em %), incluímos o envio do resumo via WhatsApp para a Naval no final do site e realizamos alguns ajustes visuais. <br> v1.2 — Salvar seu cálculo no histórico (cookies locais). <br> v1.3 Adicionado a opção de calcular as parcelas possíveis para financiamento de lanchas usadas </div>
+      <div class="item">v1.1 — Adicionamos a opção de entrada em R$ (preenche automaticamente o campo em %), incluímos o envio do resumo via WhatsApp para a Naval no final do site e realizamos alguns ajustes visuais. <br> v1.2 — Salvar seu cálculo no histórico (cookies locais). <br> v1.3 — Atualizada a informação sobre financiamento de lanchas usadas: fabricação máxima de até 5 anos e prazo de até 36 parcelas </div>
     </aside>
 
     <div class="grid">
@@ -171,36 +197,27 @@
         </div>
 
         <div class="used-box">
-          <h3>Descubra a parcela da lancha usada</h3>
+          <h3>Informação importante sobre lanchas usadas</h3>
 
-          <div class="used-grid">
-            <div class="field">
-              <label for="mesFabricacao">Mês de fabricação</label>
-              <select id="mesFabricacao">
-                <option value="">Selecione o mês</option>
-                <option value="1">Janeiro</option>
-                <option value="2">Fevereiro</option>
-                <option value="3">Março</option>
-                <option value="4">Abril</option>
-                <option value="5">Maio</option>
-                <option value="6">Junho</option>
-                <option value="7">Julho</option>
-                <option value="8">Agosto</option>
-                <option value="9">Setembro</option>
-                <option value="10">Outubro</option>
-                <option value="11">Novembro</option>
-                <option value="12">Dezembro</option>
-              </select>
+          <div id="infoLanchaUsada" class="used-info">
+            <div class="info-row">
+              <span class="info-label">Data mínima de fabricação aceita</span>
+              <strong id="dataFabricacaoMinima">—</strong>
             </div>
 
-            <div class="field">
-              <label for="anoFabricacao">Ano de fabricação</label>
-              <input id="anoFabricacao" type="number" placeholder="Ex.: 2025" min="1900" max="9999" />
+            <div class="info-row">
+              <span class="info-label">Prazo máximo do financiamento</span>
+              <strong>36 parcelas</strong>
             </div>
-          </div>
 
-          <div id="resultadoLanchaUsada" class="help">
-            Informe o mês e o ano de fabricação para descobrir o prazo máximo da operação.
+            <div class="info-row">
+              <span class="info-label">Data final máxima da operação</span>
+              <strong id="dataFinalFinanciamento">—</strong>
+            </div>
+
+            <p id="textoLanchaUsada" class="used-note">
+              As datas serão atualizadas automaticamente com base no dia de hoje.
+            </p>
           </div>
         </div>
       </div>
@@ -369,9 +386,9 @@ const valorSubsidiado = el('valorSubsidiado');
 const valorLiquido = el('valorLiquido');
 const valorTotalRecebido = el('valorTotalRecebido');
 const resumoBox = el('resumoFin');
-const mesFabricacao = el('mesFabricacao');
-const anoFabricacao = el('anoFabricacao');
-const resultadoLanchaUsada = el('resultadoLanchaUsada');
+const dataFabricacaoMinima = el('dataFabricacaoMinima');
+const dataFinalFinanciamento = el('dataFinalFinanciamento');
+const textoLanchaUsada = el('textoLanchaUsada');
 
 // Estado de edição para sincronização
 let lastEdited = 'percEntrada';
@@ -413,52 +430,51 @@ function renderHistory(){
   }).join('');
 }
 
-// ===== Descobrir parcelas da lancha usada =====
-function calcularParcelasLanchaUsada(){
-  const mes = parseInt(mesFabricacao.value, 10);
-  const ano = parseInt(anoFabricacao.value, 10);
+// ===== Informação sobre lanchas usadas =====
+function addYearsSafe(date, years){
+  const d = new Date(date);
+  const originalMonth = d.getMonth();
+  d.setFullYear(d.getFullYear() + years);
 
-  if (!mes || !ano) {
-    resultadoLanchaUsada.textContent = 'Informe o mês e o ano de fabricação para descobrir o prazo máximo da operação.';
-    resultadoLanchaUsada.className = 'help';
-    return;
+  // Ajuste para datas como 29/02 em anos não bissextos
+  if (d.getMonth() !== originalMonth) {
+    d.setDate(0);
   }
 
-  if (mes < 1 || mes > 12 || ano < 1900 || ano > 9999) {
-    resultadoLanchaUsada.textContent = 'Data de fabricação inválida.';
-    resultadoLanchaUsada.className = 'help';
-    return;
-  }
+  return d;
+}
 
+function addMonthsSafe(date, months){
+  const d = new Date(date);
+  const originalDay = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + months);
+
+  const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(originalDay, lastDay));
+
+  return d;
+}
+
+function fmtDateBR(date){
+  return date.toLocaleDateString('pt-BR');
+}
+
+function atualizarInfoLanchaUsada(){
   const hoje = new Date();
-  const inicioMesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-  const dataFabricacao = new Date(ano, mes - 1, 1);
+  hoje.setHours(0,0,0,0);
 
-  if (dataFabricacao > inicioMesAtual) {
-    resultadoLanchaUsada.textContent = 'A data de fabricação não pode ser futura.';
-    resultadoLanchaUsada.className = 'help';
-    return;
-  }
+  const dataMinimaFabricacao = addYearsSafe(hoje, -5);
+  const dataFinal = addMonthsSafe(hoje, 36);
 
-  // Limite máximo: 48 meses após a fabricação
-  const dataLimite = new Date(ano, (mes - 1) + 48, 1);
+  dataFabricacaoMinima.textContent = fmtDateBR(dataMinimaFabricacao);
+  dataFinalFinanciamento.textContent = fmtDateBR(dataFinal);
 
-  const mesesRestantes =
-    (dataLimite.getFullYear() - inicioMesAtual.getFullYear()) * 12 +
-    (dataLimite.getMonth() - inicioMesAtual.getMonth());
-
-  const prazoMaximo = Math.max(0, mesesRestantes);
-
-  if (prazoMaximo <= 0) {
-    resultadoLanchaUsada.innerHTML = 'Essa lancha já ultrapassou o limite de <strong>48 meses após a fabricação</strong> e não possui prazo disponível para financiamento.';
-    resultadoLanchaUsada.className = '';
-    return;
-  }
-
-  resultadoLanchaUsada.innerHTML =
-    `Prazo máximo da operação para essa lancha usada: <strong>${prazoMaximo} parcelas</strong>.<br>` +
-    `Regra aplicada: o financiamento não pode ultrapassar <strong>48 meses após a fabricação</strong>.`;
-  resultadoLanchaUsada.className = '';
+  textoLanchaUsada.innerHTML =
+    `Hoje, <strong>${fmtDateBR(hoje)}</strong>, é possível financiar lanchas usadas fabricadas a partir de ` +
+    `<strong>${fmtDateBR(dataMinimaFabricacao)}</strong>. ` +
+    `O prazo máximo é de <strong>36 parcelas</strong>, com término máximo em ` +
+    `<strong>${fmtDateBR(dataFinal)}</strong>, considerando a data de contratação de hoje.`;
 }
 
 // ===== Cálculo principal =====
@@ -572,8 +588,6 @@ valorEntradaManual.addEventListener('blur', ()=>{
 percEntrada.addEventListener('input', ()=>{ lastEdited='percEntrada'; recalc(); });
 taxaComercial.addEventListener('change', recalc);
 numParcelas.addEventListener('change', recalc);
-mesFabricacao.addEventListener('change', calcularParcelasLanchaUsada);
-anoFabricacao.addEventListener('input', calcularParcelasLanchaUsada);
 
 // Copiar resultados
 (document.getElementById('copiar')||{}).onclick = async () => {
@@ -598,13 +612,10 @@ anoFabricacao.addEventListener('input', calcularParcelasLanchaUsada);
   percEntrada.value='';
   taxaComercial.value='1.99';
   numParcelas.value='6';
-  mesFabricacao.value='';
-  anoFabricacao.value='';
   lastEdited='percEntrada';
   resumoBox.textContent = 'Preencha os campos para ver o resumo do financiamento.';
-  resultadoLanchaUsada.textContent = 'Informe o mês e o ano de fabricação para descobrir o prazo máximo da operação.';
-  resultadoLanchaUsada.className = 'help';
   recalc();
+  atualizarInfoLanchaUsada();
 };
 
 // Salvar cálculo (histórico)
@@ -636,7 +647,6 @@ anoFabricacao.addEventListener('input', calcularParcelasLanchaUsada);
 // Inicializa
 recalc();
 renderHistory();
-calcularParcelasLanchaUsada();
+atualizarInfoLanchaUsada();
   </script>
 </body>
-</html>
