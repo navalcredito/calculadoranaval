@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NX Boats • Simulador de Financiamento</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #121a2b;
+      --muted: #8aa0c5;
+      --text: #f2f6ff;
+      --accent: #2dd4bf;
+      --accent-2: #60a5fa;
+      --danger: #f87171;
+      --ok: #34d399;
+      --radius: 16px;
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, 'Helvetica Neue', Arial;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; box-sizing: border-box; }
+    .header { position: relative; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 56px; height: 56px; border-radius: 14px;
+      padding: 6px;
+      background-color: rgba(255,255,255,0.06);
+      background-image: linear-gradient(135deg, var(--accent), var(--accent-2));
+      background-size: contain; background-position: center; background-repeat: no-repeat;
+      box-sizing: border-box;
+    }
+    .brand h1 { font-size: 20px; margin: 0; }
+    .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius); padding: 16px; box-sizing: border-box; }
+    .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; }
+    @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
+
+    .field { margin-bottom: 12px; }
+    label { display:block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    input, select { width: 100%; max-width: 100%; box-sizing: border-box; border-radius: 12px; padding: 10px; font-size: 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); }
+    input[type="text"], input[type="number"] { color: var(--text) !important; }
+    select, select option { color: var(--accent-2) !important; }
+    ::placeholder { color: rgba(255,255,255,0.6); }
+    input[readonly] { opacity: .9; background: rgba(255,255,255,0.05); color: var(--text); }
+
+    .footer { display:flex; gap:10px; justify-content:flex-end; padding-top: 12px; }
+    button { cursor: pointer; border-radius: 12px; padding: 10px 14px; font-weight: 600; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.08); color: var(--text); }
+    button.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; color: #fff; }
+    .help { color: var(--muted); font-size: 12px; }
+
+    #resumoFin {
+      font-size: 14px; line-height: 1.5; color: var(--text);
+      background: rgba(255,255,255,0.02);
+      border: 1px dashed rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 6px;
+    }
+
+    .updates {
+      position: fixed; top: 76px; right: 16px; width: 280px; z-index: 1000;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px; padding: 12px 12px 10px 12px; backdrop-filter: blur(6px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+    .updates h3 { margin: 0 0 4px; font-size: 14px; letter-spacing: .2px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .updates .item { font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .updates .close { cursor:pointer; border:none; background:transparent; color: var(--text); opacity:.7; font-size:14px; line-height:1; padding:2px 6px; border-radius:8px; }
+    .updates .close:hover{opacity:1; background: rgba(255,255,255,0.08);}
+
+    .param-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
+
+    .used-box {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .used-box h3 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      color: var(--text);
+    }
+    .used-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 640px) {
+      .used-grid { grid-template-columns: 1fr; }
+    }
+    .used-info {
+      display: grid;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .info-label {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .info-row strong {
+      color: var(--accent);
+      font-size: 15px;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .used-note {
+      margin: 2px 0 0 0;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(45,212,191,0.08);
+      border: 1px dashed rgba(45,212,191,0.28);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    #histList { display: grid; grid-template-columns: 1fr; gap: 8px; white-space: pre-wrap; }
+    .hist-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 10px; }
+    .hist-item time { display:block; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .hist-item .text { font-size: 13px; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <div class="logo" id="logoBox"></div>
+        <h1>NX Boats • Simulador de Financiamento</h1>
+      </div>
+      <div class="help">Calculadora FIDC NX</div>
+    </div>
+
+    <aside class="updates" aria-label="Atualizações" id="updatesBox">
+      <h3>Atualizações <button class="close" id="updatesClose" aria-label="Fechar">✕</button></h3>
+      <div class="item">v1.1 — Adicionamos a opção de entrada em R$ (preenche automaticamente o campo em %), incluímos o envio do resumo via WhatsApp para a Naval no final do site e realizamos alguns ajustes visuais. <br> v1.2 — Salvar seu cálculo no histórico (cookies locais). <br> v1.3 — Atualizada a informação sobre financiamento de lanchas usadas: fabricação máxima de até 5 anos e prazo de até 36 parcelas </div>
+    </aside>
+
+    <div class="grid">
+      <!-- Parâmetros -->
+      <div class="card">
+        <h2>Parâmetros</h2>
+
+        <div class="field">
+          <label for="valorLancha">Valor da Lancha (R$)</label>
+          <input id="valorLancha" type="text" placeholder="R$ 0,00" />
+        </div>
+
+        <div class="field">
+          <label for="valorEntradaManual">Valor entrada (R$)</label>
+          <input id="valorEntradaManual" type="text" placeholder="R$ 0,00" />
+        </div>
+
+        <div class="field">
+          <label for="percEntrada">% Valor entrada (%)</label>
+          <input id="percEntrada" type="number" step="0.01" placeholder="Ex.: 30" />
+        </div>
+
+        <div class="field">
+          <label for="taxaComercial">Taxa Comercial (% a.m.)</label>
+          <select id="taxaComercial">
+            <option value="0.00">0,00%</option>
+            <option value="0.69">0,69%</option>
+            <option value="0.79">0,79%</option>
+            <option value="0.99">0,99%</option>
+            <option value="1.29">1,29%</option>
+            <option value="1.39">1,39%</option>
+            <option value="1.99" selected>1,99%</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="numParcelas">Número de Parcelas (meses)</label>
+          <select id="numParcelas">
+            <option>6</option><option>10</option><option>12</option><option>15</option><option>18</option><option>20</option><option>24</option><option>30</option><option>36</option><option>40</option><option>42</option>
+          </select>
+        </div>
+
+        <div class="param-actions">
+          <button id="salvarResumo">Salvar cálculo</button>
+        </div>
+
+        <div class="used-box">
+          <h3>Informação importante sobre lanchas usadas</h3>
+
+          <div id="infoLanchaUsada" class="used-info">
+            <div class="info-row">
+              <span class="info-label">Data mínima de fabricação aceita</span>
+              <strong id="dataFabricacaoMinima">—</strong>
+            </div>
+
+            <div class="info-row">
+              <span class="info-label">Prazo máximo do financiamento</span>
+              <strong>36 parcelas</strong>
+            </div>
+
+            <div class="info-row">
+              <span class="info-label">Data final máxima da operação</span>
+              <strong id="dataFinalFinanciamento">—</strong>
+            </div>
+
+            <p id="textoLanchaUsada" class="used-note">
+              As datas serão atualizadas automaticamente com base no dia de hoje.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resultados -->
+      <div class="card">
+        <h2>Resultados</h2>
+        <div class="field"><label>Valor entrada (R$)</label><input id="valorEntrada" readonly /></div>
+        <div class="field"><label>% Valor financiado (%)</label><input id="percFinanciado" readonly /></div>
+        <div class="field"><label>Valor financiado (R$)</label><input id="valorFinanciado" readonly /></div>
+        <div class="field"><label>Valor Parcela Mensal (R$/mês)</label><input id="parcelaMensal" readonly /></div>
+        <div class="field"><label>Equalização de Taxa (%)</label><input id="equalizacaoPerc" readonly /></div>
+        <div class="field"><label>Valor Subsidiado (R$)</label><input id="valorSubsidiado" readonly /></div>
+        <div class="field"><label>Valor Financiado líquido de Equalização (R$)</label><div id="valorLiquido">R$ 0,00</div></div>
+        <div class="field"><label>Valor Total Recebido (R$)</label><div id="valorTotalRecebido">R$ 0,00</div></div>
+      </div>
+
+      <!-- Resumo -->
+      <div class="card" style="grid-column: 1 / -1;">
+        <h2>Resumo</h2>
+        <div id="resumoFin" class="help">Preencha os campos para ver o resumo do financiamento.</div>
+      </div>
+
+      <!-- Histórico -->
+      <div class="card" style="grid-column: 1 / -1;" id="histCard">
+        <h2>Histórico de Cálculos</h2>
+        <div id="histList" class="help">Nenhum cálculo salvo ainda.</div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+          <button id="limparHistorico">Limpar histórico</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <button id="copiar">Copiar resultados</button>
+      <button id="enviarWhatsapp">Enviar para Naval via WhatsApp</button>
+      <button id="limpar" class="primary">Limpar</button>
+    </div>
+  </div>
+
+  <script>
+// ===== CONFIGURAÇÃO DA LOGO =====
+const LOGO_URL = 'https://i.imgur.com/9D2KFZo.png';
+
+// === TABELA (Taxa -> Prazo -> { equalizacao, fator }) ===
+const TABLE = {
+  "0.00": {
+    "6": {equalizacao:0.0661130450017311,fator:0.169106},
+    "10":{equalizacao:0.101271340480483,fator:0.102008},
+    "12":{equalizacao:0.118180092231273,fator:0.085238},
+    "15":{equalizacao:0.142741226735288,fator:0.068394},
+    "18":{equalizacao:0.166376610459856,fator:0.057107},
+    "20":{equalizacao:0.18163880422293702,fator:0.051447},
+    "24":{equalizacao:0.2110262903899,fator:0.042936},
+    "30":{equalizacao:0.252423947932931,fator:0.034399},
+    "36":{equalizacao:0.290838207305738,fator:0.028693},
+    "40":{equalizacao:0.314912098526916,fator:0.025836},
+    "42":{equalizacao:0.326513927685167,fator:0.024611}
+  },
+  "0.69": {
+    "6": {equalizacao:0.04343,fator:0.173117},
+    "10":{equalizacao:0.06681,fator:0.105834},
+    "12":{equalizacao:0.07813,fator:0.089026},
+    "15":{equalizacao:0.09466,fator:0.072152},
+    "18":{equalizacao:0.11067,fator:0.060853},
+    "20":{equalizacao:0.12106,fator:0.055189},
+    "24":{equalizacao:0.14118,fator:0.046677},
+    "30":{equalizacao:0.16982,fator:0.038149},
+    "36":{equalizacao:0.19669,fator:0.032457},
+    "40":{equalizacao:0.21368,fator:0.029612},
+    "42":{equalizacao:0.22191,fator:0.028393}
+  },
+  "0.79": {
+    "6": {equalizacao:0.04012,fator:0.173716},
+    "10":{equalizacao:0.06176,fator:0.106407},
+    "12":{equalizacao:0.07225,fator:0.089594},
+    "15":{equalizacao:0.08757,fator:0.072718},
+    "18":{equalizacao:0.10242,fator:0.061418},
+    "20":{equalizacao:0.11206,fator:0.055754},
+    "24":{equalizacao:0.13077,fator:0.047243},
+    "30":{equalizacao:0.15740,fator:0.038719},
+    "36":{equalizacao:0.18244,fator:0.033033},
+    "40":{equalizacao:0.19830,fator:0.030191},
+    "42":{equalizacao:0.20598,fator:0.028974}
+  },
+  "0.99": {
+    "6": {equalizacao:0.0334882274589979,fator:0.175014},
+    "10":{equalizacao:0.0516125603890935,fator:0.107644},
+    "12":{equalizacao:0.0604103624074597,fator:0.090822},
+    "15":{equalizacao:0.0732862426035454,fator:0.073935},
+    "18":{equalizacao:0.0857871108872601,fator:0.062628},
+    "20":{equalizacao:0.093918090215402,fator:0.056962},
+    "24":{equalizacao:0.109707184125572,fator:0.048449},
+    "30":{equalizacao:0.132254200840495,fator:0.039928},
+    "36":{equalizacao:0.153506979583435,fator:0.034249},
+    "40":{equalizacao:0.166993344274932,fator:0.031414},
+    "42":{equalizacao:0.173539814299164,fator:0.030201}
+  },
+  "1.29": {
+    "6": {equalizacao:0.0235,fator:0.176724},
+    "10":{equalizacao:0.03628,fator:0.109296},
+    "12":{equalizacao:0.0425,fator:0.092466},
+    "15":{equalizacao:0.05163,fator:0.075582},
+    "18":{equalizacao:0.06051,fator:0.064285},
+    "20":{equalizacao:0.0663,fator:0.058628},
+    "24":{equalizacao:0.07756,fator:0.050135},
+    "30":{equalizacao:0.09371,fator:0.041646},
+    "36":{equalizacao:0.10899,fator:0.036001},
+    "40":{equalizacao:0.11871,fator:0.033188},
+    "42":{equalizacao:0.12344,fator:0.031986}
+  },
+  "1.39": {
+    "6": {equalizacao:0.0201568575602853,fator:0.177428},
+    "10":{equalizacao:0.0311412978252027,fator:0.109968},
+    "12":{equalizacao:0.0364922537621693,fator:0.093134},
+    "15":{equalizacao:0.0443457655299061,fator:0.076244},
+    "18":{equalizacao:0.0519956174240499,fator:0.064943},
+    "20":{equalizacao:0.0569844859492114,fator:0.059284},
+    "24":{equalizacao:0.066701364072283,fator:0.05079},
+    "30":{equalizacao:0.0806429282522513,fator:0.042303},
+    "36":{equalizacao:0.0938527772803189,fator:0.036663},
+    "40":{equalizacao:0.102268435706342,fator:0.033855},
+    "42":{equalizacao:0.106362424033621,fator:0.032655}
+  },
+  "1.99": {
+    "6": {equalizacao:-0.0,fator:0.181078},
+    "10":{equalizacao:-0.0,fator:0.113503},
+    "12":{equalizacao:-0.0,fator:0.096661},
+    "15":{equalizacao:0.0,fator:0.079782},
+    "18":{equalizacao:-0.0,fator:0.068505},
+    "20":{equalizacao:-0.0,fator:0.062866},
+    "24":{equalizacao:-0.0,fator:0.05442},
+    "30":{equalizacao:-0.0,fator:0.046014},
+    "36":{equalizacao:-0.0,fator:0.04046},
+    "40":{equalizacao:-0.0,fator:0.037712},
+    "42":{equalizacao:-0.0,fator:0.036542}
+  }
+};
+
+// === Utils ===
+const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const PCT = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 2 });
+function toNumberFromBRL(t){
+  if(!t) return 0;
+  let s=String(t).trim();
+  s=s.replace(/[^0-9,\.]/g,''); s=s.replace(/\./g,'');
+  if(s.includes(',')){ s=s.replace(/,([^,]*)$/, '.$1'); s=s.replace(/,/g,''); }
+  const v=parseFloat(s); return isNaN(v)?0:v;
+}
+function fmtBRL(n){ return BRL.format(n||0); }
+
+// === Elementos ===
+const el = (id)=>document.getElementById(id);
+const logoBox = el('logoBox');
+const valorLancha = el('valorLancha');
+const valorEntradaManual = el('valorEntradaManual');
+const percEntrada = el('percEntrada');
+const taxaComercial = el('taxaComercial');
+const numParcelas = el('numParcelas');
+const valorEntrada = el('valorEntrada');
+const percFinanciado = el('percFinanciado');
+const valorFinanciado = el('valorFinanciado');
+const parcelaMensal = el('parcelaMensal');
+const equalizacaoPerc = el('equalizacaoPerc');
+const valorSubsidiado = el('valorSubsidiado');
+const valorLiquido = el('valorLiquido');
+const valorTotalRecebido = el('valorTotalRecebido');
+const resumoBox = el('resumoFin');
+const dataFabricacaoMinima = el('dataFabricacaoMinima');
+const dataFinalFinanciamento = el('dataFinalFinanciamento');
+const textoLanchaUsada = el('textoLanchaUsada');
+
+// Estado de edição para sincronização
+let lastEdited = 'percEntrada';
+
+// ===== Histórico local (cookies) =====
+function setCookie(name, value, days=365){
+  const d=new Date(); d.setTime(d.getTime()+days*24*60*60*1000);
+  document.cookie = `${name}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/`;
+}
+function getCookie(name){
+  return document.cookie.split('; ').reduce((a,c)=>{
+    const [k,...v]=c.split('=');
+    a[k]=decodeURIComponent(v.join('='));
+    return a;
+  },{})[name];
+}
+const COOKIE_HISTORY = 'nx_hist';
+const MAX_HISTORY = 20;
+
+function loadHistory(){
+  try { const raw = getCookie(COOKIE_HISTORY)||''; return raw? JSON.parse(raw): []; } catch(e){ return []; }
+}
+function saveHistory(arr){
+  try {
+    let json = JSON.stringify(arr);
+    while (json.length>3500 && arr.length>1){ arr.shift(); json = JSON.stringify(arr); }
+    setCookie(COOKIE_HISTORY, json);
+  } catch(e){}
+}
+function renderHistory(){
+  const wrap = document.getElementById('histList');
+  const hist = loadHistory();
+  if (!wrap) return;
+  if (!hist.length){ wrap.classList.add('help'); wrap.textContent='Nenhum cálculo salvo ainda.'; return; }
+  wrap.classList.remove('help');
+  wrap.innerHTML = hist.map(h=>{
+    const d = new Date(h.ts||Date.now()).toLocaleString('pt-BR');
+    return `<div class="hist-item"><time>${d}</time><div class="text">${(h.text||'').replace(/</g,'&lt;')}</div></div>`;
+  }).join('');
+}
+
+// ===== Informação sobre lanchas usadas =====
+function addYearsSafe(date, years){
+  const d = new Date(date);
+  const originalMonth = d.getMonth();
+  d.setFullYear(d.getFullYear() + years);
+
+  // Ajuste para datas como 29/02 em anos não bissextos
+  if (d.getMonth() !== originalMonth) {
+    d.setDate(0);
+  }
+
+  return d;
+}
+
+function addMonthsSafe(date, months){
+  const d = new Date(date);
+  const originalDay = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + months);
+
+  const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(originalDay, lastDay));
+
+  return d;
+}
+
+function fmtDateBR(date){
+  return date.toLocaleDateString('pt-BR');
+}
+
+function atualizarInfoLanchaUsada(){
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+
+  const dataMinimaFabricacao = addYearsSafe(hoje, -5);
+  const dataFinal = addMonthsSafe(hoje, 36);
+
+  dataFabricacaoMinima.textContent = fmtDateBR(dataMinimaFabricacao);
+  dataFinalFinanciamento.textContent = fmtDateBR(dataFinal);
+
+  textoLanchaUsada.innerHTML =
+    `Hoje, <strong>${fmtDateBR(hoje)}</strong>, é possível financiar lanchas usadas fabricadas a partir de ` +
+    `<strong>${fmtDateBR(dataMinimaFabricacao)}</strong>. ` +
+    `O prazo máximo é de <strong>36 parcelas</strong>, com término máximo em ` +
+    `<strong>${fmtDateBR(dataFinal)}</strong>, considerando a data de contratação de hoje.`;
+}
+
+// ===== Cálculo principal =====
+function recalc(){
+  const vl = toNumberFromBRL(valorLancha.value);
+  const pe = parseFloat(String(percEntrada.value).replace(',', '.')) || 0;
+  const veManual = toNumberFromBRL(valorEntradaManual.value);
+  const taxa = String(taxaComercial.value);
+  const prazo = parseInt(numParcelas.value,10);
+
+  // Sincronização % <-> R$
+  let entradaR = 0;
+  if (vl > 0) {
+    if (lastEdited === 'valorEntrada' && veManual >= 0) {
+      entradaR = Math.min(veManual, vl);
+      const pct = (entradaR / vl) * 100;
+      if (!Number.isNaN(pct)) { percEntrada.value = pct.toFixed(2).replace('.', ','); }
+    } else {
+      const pct = Math.max(0, Math.min(100, pe));
+      entradaR = vl * (pct/100);
+      if (document.activeElement !== valorEntradaManual) {
+        valorEntradaManual.value = entradaR ? fmtBRL(entradaR) : '';
+      }
+    }
+  } else {
+    entradaR = 0;
+    if (document.activeElement !== valorEntradaManual) valorEntradaManual.value = '';
+  }
+
+  const percFin = vl > 0 ? Math.max(0, 100 - (entradaR / (vl||1)) * 100) : 0;
+  const financiadoR = Math.max(0, vl - entradaR);
+
+  valorEntrada.value = fmtBRL(entradaR);
+  percFinanciado.value = `${percFin.toFixed(2).replace('.', ',')}%`;
+  valorFinanciado.value = fmtBRL(financiadoR);
+
+  const row = (TABLE[taxa]||{})[prazo];
+  if (!row) {
+    parcelaMensal.value = '';
+    equalizacaoPerc.value = '';
+    valorSubsidiado.value = '';
+    valorLiquido.textContent = '—';
+    valorTotalRecebido.textContent = '—';
+    if (resumoBox) resumoBox.textContent = 'Preencha os campos para ver o resumo do financiamento.';
+    return;
+  }
+
+  const fator = Number(row.fator||0);
+  let eq = Number(row.equalizacao||0);
+  if (Math.abs(eq) < 1e-14) eq = 0;
+
+  const parcela = fator * financiadoR;
+  const subsidio = eq * financiadoR;
+  const liquido = Math.max(0, financiadoR - subsidio);
+  const totalRecebido = entradaR + liquido;
+
+  parcelaMensal.value = fmtBRL(parcela);
+  equalizacaoPerc.value = PCT.format(eq);
+  valorSubsidiado.value = fmtBRL(subsidio);
+  valorLiquido.textContent = fmtBRL(liquido);
+
+  const pctDelta = (vl > 0) ? ((totalRecebido - vl) / vl) : 0;
+  const pctLabel = new Intl.NumberFormat('pt-BR', { style:'percent', maximumFractionDigits: 2 }).format(pctDelta);
+  valorTotalRecebido.textContent = `${fmtBRL(totalRecebido)} (${pctLabel})`;
+
+  try {
+    const taxaLabel = `${taxa.replace('.', ',')}% a.m.`;
+    const entradaPct = (vl>0)?(entradaR/vl*100):0;
+    const resumo =
+      `A lancha custa ${fmtBRL(vl)}. ` +
+      `A entrada é ${fmtBRL(entradaR)} (${entradaPct.toFixed(2).replace('.', ',')}%) ` +
+      `e o saldo a financiar é ${fmtBRL(financiadoR)} (${percFin.toFixed(2).replace('.', ',')}%). ` +
+      `O financiamento tem taxa comercial ${taxaLabel} ` +
+      `e será pago em ${prazo} parcelas de ${fmtBRL(parcela)}. ` +
+      `Com equalização de ${PCT.format(eq)} (= ${fmtBRL(subsidio)}), ` +
+      `a NX Boats recebe ${fmtBRL(totalRecebido)} (entrada + financiamento líquido de equalização).`;
+    resumoBox.textContent = resumo;
+  } catch(e){}
+}
+
+// === Interações ===
+valorLancha.addEventListener('input', () => {
+  const digits = String(valorLancha.value).replace(/\D/g, '');
+  if (!digits) { valorLancha.value = ''; recalc(); return; }
+  const num = parseFloat(digits) / 100;
+  valorLancha.value = BRL.format(num);
+  recalc();
+});
+valorLancha.addEventListener('blur', ()=>{
+  const raw=toNumberFromBRL(valorLancha.value);
+  valorLancha.value = raw?fmtBRL(raw):'';
+  if (toNumberFromBRL(valorEntradaManual.value)>0){ lastEdited='valorEntrada'; }
+  recalc();
+});
+
+valorEntradaManual.addEventListener('input', () => {
+  lastEdited = 'valorEntrada';
+  const digits = String(valorEntradaManual.value).replace(/\D/g, '');
+  if (!digits) { valorEntradaManual.value = ''; recalc(); return; }
+  const num = parseFloat(digits) / 100;
+  valorEntradaManual.value = BRL.format(num);
+  recalc();
+});
+valorEntradaManual.addEventListener('blur', ()=>{
+  lastEdited='valorEntrada';
+  const raw=toNumberFromBRL(valorEntradaManual.value);
+  valorEntradaManual.value = raw?fmtBRL(raw):'';
+  recalc();
+});
+
+percEntrada.addEventListener('input', ()=>{ lastEdited='percEntrada'; recalc(); });
+taxaComercial.addEventListener('change', recalc);
+numParcelas.addEventListener('change', recalc);
+
+// Copiar resultados
+(document.getElementById('copiar')||{}).onclick = async () => {
+  const resumo = resumoBox?.textContent || '';
+  try { await navigator.clipboard.writeText(resumo); alert('Resumo copiado.'); }
+  catch(e){ alert('Não foi possível copiar automaticamente — selecione e copie manualmente.'); }
+};
+
+// Enviar via WhatsApp (Naval)
+(document.getElementById('enviarWhatsapp')||{}).onclick = async () => {
+  const resumo = resumoBox?.textContent || '';
+  try { await navigator.clipboard.writeText(resumo); } catch(e){}
+  const phone = '5511916631101';
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(resumo)}`;
+  window.open(url, '_blank');
+};
+
+// Limpar parâmetros
+(document.getElementById('limpar')||{}).onclick = ()=>{
+  valorLancha.value='';
+  valorEntradaManual.value='';
+  percEntrada.value='';
+  taxaComercial.value='1.99';
+  numParcelas.value='6';
+  lastEdited='percEntrada';
+  resumoBox.textContent = 'Preencha os campos para ver o resumo do financiamento.';
+  recalc();
+  atualizarInfoLanchaUsada();
+};
+
+// Salvar cálculo (histórico)
+(document.getElementById('salvarResumo')||{}).onclick = ()=>{
+  const text = (resumoBox?.textContent||'').trim();
+  if (!text || /Preencha os campos/.test(text)) { alert('Preencha os parâmetros para gerar o resumo antes de salvar.'); return; }
+  const hist = loadHistory();
+  hist.push({ ts: Date.now(), text });
+  while (hist.length>MAX_HISTORY) hist.shift();
+  saveHistory(hist);
+  renderHistory();
+};
+
+// Limpar histórico
+(document.getElementById('limparHistorico')||{}).onclick = ()=>{
+  setCookie(COOKIE_HISTORY,'[]');
+  renderHistory();
+};
+
+// Logo + updates
+(function initUI(){
+  if (LOGO_URL) logoBox.style.backgroundImage = `url('${LOGO_URL}')`;
+  (document.getElementById('updatesClose')||{}).onclick = () => {
+    const box = document.getElementById('updatesBox');
+    if (box) box.style.display = 'none';
+  };
+})();
+
+// Inicializa
+recalc();
+renderHistory();
+atualizarInfoLanchaUsada();
+  </script>
+</body>
+</html>
