@@ -292,12 +292,11 @@
 
   <script>
 // ===== MODO INTERNO =====
-// Este arquivo serve as duas versões. Publicado como naval.html (ou com
-// ?interno=1 na URL) ele exibe os campos de uso interno da Naval; publicado
-// como index.html fica na versão do vendedor. É o MESMO arquivo nos dois
-// endereços — basta copiar, não existe código duplicado para manter em dia.
-const MODO_INTERNO = /naval/i.test(location.pathname)
-  || new URLSearchParams(location.search).has('interno');
+// Este arquivo serve as duas versões. Servido como naval.html ele exibe os
+// campos de uso interno da Naval; em qualquer outro endereço fica na versão
+// simples, do vendedor. É o MESMO arquivo nos dois endereços — basta copiar,
+// não existe código duplicado para manter em dia.
+const MODO_INTERNO = /(^|\/)naval(\.html)?$/i.test(location.pathname);
 
 // ===== PREMISSAS DE CUSTO =====
 // IOF/Crédito — Decreto 6.306/2007 com a redação do Decreto 12.499/2025
