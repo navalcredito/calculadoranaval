@@ -51,6 +51,7 @@
     button { cursor: pointer; border-radius: 12px; padding: 10px 14px; font-weight: 600; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.08); color: var(--text); }
     button.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; color: #fff; }
     .help { color: var(--muted); font-size: 12px; }
+    .versao { text-align: right; color: var(--muted); font-size: 11px; margin: 10px 2px 24px 0; }
     .badge-interno {
       display: none; margin-right: 10px; padding: 3px 9px; border-radius: 999px;
       background: rgba(251,146,60,0.14); border: 1px solid rgba(251,146,60,0.45);
@@ -100,17 +101,6 @@
       margin-top: 6px;
     }
 
-    .updates {
-      position: fixed; top: 76px; right: 16px; width: 280px; z-index: 1000;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 14px; padding: 12px 12px 10px 12px; backdrop-filter: blur(6px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-    }
-    .updates h3 { margin: 0 0 4px; font-size: 14px; letter-spacing: .2px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
-    .updates .item { font-size: 12px; color: var(--muted); line-height: 1.4; }
-    .updates .close { cursor:pointer; border:none; background:transparent; color: var(--text); opacity:.7; font-size:14px; line-height:1; padding:2px 6px; border-radius:8px; }
-    .updates .close:hover{opacity:1; background: rgba(255,255,255,0.08);}
 
     .param-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
 
@@ -187,15 +177,6 @@
       <div class="help"><span class="badge-interno" id="badgeInterno">Uso interno · Naval Crédito</span>Calculadora FIDC NX</div>
     </div>
 
-    <aside class="updates" aria-label="Atualizações" id="updatesBox">
-      <h3>Atualizações <button class="close" id="updatesClose" aria-label="Fechar">✕</button></h3>
-      <div class="item">
-        v1.1 — Adicionamos a opção de entrada em R$ (preenche automaticamente o campo em %), incluímos o envio do resumo via WhatsApp para a Naval no final do site e realizamos alguns ajustes visuais. <br>
-        v1.2 — Salvar seu cálculo no histórico (cookies locais). <br>
-        v1.3 — Atualizada a informação sobre financiamento de lanchas usadas: fabricação máxima de até 5 anos e prazo de até 36 parcelas <br>
-        v1.4 — Campanha SPBS 2026 (Fundo a 1,79% a.m.), mais opções de taxa e de prazo, e cálculo de IOF por fórmula em vez de tabela fixa.
-      </div>
-    </aside>
 
     <div class="grid">
       <!-- Parâmetros -->
@@ -305,6 +286,8 @@
       <button id="enviarWhatsapp">Enviar para Naval via WhatsApp</button>
       <button id="limpar" class="primary">Limpar</button>
     </div>
+
+    <p class="versao">v2.0</p>
   </div>
 
   <script>
@@ -739,14 +722,6 @@ numParcelas.addEventListener('change', recalc);
   setCookie(COOKIE_HISTORY,'[]');
   renderHistory();
 };
-
-// Logo + updates
-(function initUI(){
-  (document.getElementById('updatesClose')||{}).onclick = () => {
-    const box = document.getElementById('updatesBox');
-    if (box) box.style.display = 'none';
-  };
-})();
 
 // Inicializa
 if (MODO_INTERNO){
