@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NX Boats • Simulador de Financiamento</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #121a2b;
+      --muted: #8aa0c5;
+      --text: #f2f6ff;
+      --accent: #2dd4bf;
+      --accent-2: #60a5fa;
+      --danger: #f87171;
+      --warn: #fb923c;
+      --ok: #34d399;
+      --radius: 16px;
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, 'Helvetica Neue', Arial;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; box-sizing: border-box; }
+    .header { position: relative; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo { height: 40px; width: auto; display: block; flex: 0 0 auto; }
+    .brand { gap: 14px; }
+    @media (max-width: 640px) {
+      .logo { height: 28px; }
+      .brand h1 { font-size: 16px; line-height: 1.25; }
+      .header { gap: 10px; }
+      .header .help { display: none; }
+    }
+    .brand h1 { font-size: 20px; margin: 0; }
+    .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius); padding: 16px; box-sizing: border-box; }
+    .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; }
+    @media (max-width: 960px) { .grid { grid-template-columns: 1fr; } }
+
+    .field { margin-bottom: 12px; }
+    label { display:block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    input, select { width: 100%; max-width: 100%; box-sizing: border-box; border-radius: 12px; padding: 10px; font-size: 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); }
+    input[type="text"], input[type="number"] { color: var(--text) !important; }
+    select, select option { color: var(--accent-2) !important; }
+    ::placeholder { color: rgba(255,255,255,0.6); }
+    input[readonly] { opacity: .9; background: rgba(255,255,255,0.05); color: var(--text); }
+
+    .footer { display:flex; gap:10px; justify-content:flex-end; padding-top: 12px; }
+    button { cursor: pointer; border-radius: 12px; padding: 10px 14px; font-weight: 600; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.08); color: var(--text); }
+    button.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; color: #fff; }
+    .help { color: var(--muted); font-size: 12px; }
+    .badge-interno {
+      display: none; margin-right: 10px; padding: 3px 9px; border-radius: 999px;
+      background: rgba(251,146,60,0.14); border: 1px solid rgba(251,146,60,0.45);
+      color: var(--warn); font-weight: 600; letter-spacing: .2px;
+    }
+    body.interno .badge-interno { display: inline-block; }
+
+    /* Campanha / toggle */
+    .switch-row {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 11px 12px; margin: -4px 0 12px 0;
+      border-radius: 12px;
+      background: rgba(45,212,191,0.06);
+      border: 1px solid rgba(45,212,191,0.22);
+      cursor: pointer;
+    }
+    .switch-row input[type="checkbox"] {
+      width: 18px; height: 18px; min-width: 18px; padding: 0; margin: 1px 0 0 0;
+      accent-color: var(--accent); cursor: pointer; border-radius: 4px;
+    }
+    .switch-row .sw-text { font-size: 13px; line-height: 1.35; }
+    .switch-row .sw-text small { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+    .switch-row.on { background: rgba(45,212,191,0.13); border-color: rgba(45,212,191,0.45); }
+
+    .taxa-fundo-note { font-size: 12px; color: var(--muted); margin: -6px 0 12px 2px; }
+    .taxa-fundo-note strong { color: var(--accent); }
+
+    /* Taxa comercial alterada pelo toggle da campanha: sinaliza em vermelho
+       até o operador confirmar escolhendo uma taxa no dropdown. */
+    select.alerta {
+      border-color: rgba(251,146,60,0.65);
+      background: rgba(251,146,60,0.12);
+    }
+    select.alerta, select.alerta option { color: var(--warn) !important; }
+    .alerta-taxa {
+      display: none; font-size: 12px; color: var(--warn);
+      margin: -8px 0 12px 2px; line-height: 1.35;
+    }
+    .alerta-taxa.on { display: block; }
+
+    #resumoFin {
+      font-size: 14px; line-height: 1.5; color: var(--text);
+      background: rgba(255,255,255,0.02);
+      border: 1px dashed rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 6px;
+    }
+
+    .updates {
+      position: fixed; top: 76px; right: 16px; width: 280px; z-index: 1000;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px; padding: 12px 12px 10px 12px; backdrop-filter: blur(6px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+    .updates h3 { margin: 0 0 4px; font-size: 14px; letter-spacing: .2px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .updates .item { font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .updates .close { cursor:pointer; border:none; background:transparent; color: var(--text); opacity:.7; font-size:14px; line-height:1; padding:2px 6px; border-radius:8px; }
+    .updates .close:hover{opacity:1; background: rgba(255,255,255,0.08);}
+
+    .param-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
+
+    .used-box {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .used-box h3 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      color: var(--text);
+    }
+    .used-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 640px) {
+      .used-grid { grid-template-columns: 1fr; }
+    }
+    .used-info {
+      display: grid;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .info-label {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .info-row strong {
+      color: var(--accent);
+      font-size: 15px;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .used-note {
+      margin: 2px 0 0 0;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(45,212,191,0.08);
+      border: 1px dashed rgba(45,212,191,0.28);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    #histList { display: grid; grid-template-columns: 1fr; gap: 8px; white-space: pre-wrap; }
+    .hist-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 10px; }
+    .hist-item time { display:block; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+    .hist-item .text { font-size: 13px; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <img class="logo" id="logoBox" alt="Sociedade Naval Crédito" src="data:image/png;base64,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" />
+        <h1>NX Boats • Simulador de Financiamento</h1>
+      </div>
+      <div class="help"><span class="badge-interno" id="badgeInterno">Uso interno · Naval Crédito</span>Calculadora FIDC NX</div>
+    </div>
+
+    <aside class="updates" aria-label="Atualizações" id="updatesBox">
+      <h3>Atualizações <button class="close" id="updatesClose" aria-label="Fechar">✕</button></h3>
+      <div class="item">
+        v1.1 — Adicionamos a opção de entrada em R$ (preenche automaticamente o campo em %), incluímos o envio do resumo via WhatsApp para a Naval no final do site e realizamos alguns ajustes visuais. <br>
+        v1.2 — Salvar seu cálculo no histórico (cookies locais). <br>
+        v1.3 — Atualizada a informação sobre financiamento de lanchas usadas: fabricação máxima de até 5 anos e prazo de até 36 parcelas <br>
+        v1.4 — Campanha SPBS 2026 (Fundo a 1,79% a.m.), mais opções de taxa e de prazo, e cálculo de IOF por fórmula em vez de tabela fixa.
+      </div>
+    </aside>
+
+    <div class="grid">
+      <!-- Parâmetros -->
+      <div class="card">
+        <h2>Parâmetros</h2>
+
+        <div class="field">
+          <label for="valorLancha">Valor da Lancha (R$)</label>
+          <input id="valorLancha" type="text" placeholder="R$ 0,00" />
+        </div>
+
+        <div class="field">
+          <label for="valorEntradaManual">Valor entrada (R$)</label>
+          <input id="valorEntradaManual" type="text" placeholder="R$ 0,00" />
+        </div>
+
+        <div class="field">
+          <label for="percEntrada">% Valor entrada (%)</label>
+          <input id="percEntrada" type="number" step="0.01" placeholder="Ex.: 30" />
+        </div>
+
+        <div class="field">
+          <label for="taxaComercial">Taxa Comercial (% a.m.) — taxa repassada ao cliente</label>
+          <select id="taxaComercial"></select>
+        </div>
+
+        <p class="alerta-taxa" id="alertaTaxa">A taxa comercial mudou com a campanha. Confira antes de passar as condições.</p>
+
+        <label class="switch-row" id="campanhaRow" for="campanhaSPBS">
+          <input type="checkbox" id="campanhaSPBS" />
+          <span class="sw-text">
+            Campanha SPBS 2026 — taxa do Fundo a 1,79% a.m.
+            <small>Confirme com a NX Boats a elegibilidade da operação.</small>
+          </span>
+        </label>
+
+        <div class="taxa-fundo-note">Taxa do Fundo aplicada nesta simulação: <strong id="taxaFundoLabel">1,99% a.m.</strong></div>
+
+        <div class="field">
+          <label for="numParcelas">Número de Parcelas (meses)</label>
+          <select id="numParcelas"></select>
+        </div>
+
+        <div class="param-actions">
+          <button id="salvarResumo">Salvar cálculo</button>
+        </div>
+
+        <div class="used-box">
+          <h3>Informação importante sobre lanchas usadas</h3>
+
+          <div id="infoLanchaUsada" class="used-info">
+            <div class="info-row">
+              <span class="info-label">Data mínima de fabricação aceita</span>
+              <strong id="dataFabricacaoMinima">—</strong>
+            </div>
+
+            <div class="info-row">
+              <span class="info-label">Prazo máximo do financiamento</span>
+              <strong>36 parcelas</strong>
+            </div>
+
+            <div class="info-row">
+              <span class="info-label">Data final máxima da operação</span>
+              <strong id="dataFinalFinanciamento">—</strong>
+            </div>
+
+            <p id="textoLanchaUsada" class="used-note">
+              As datas serão atualizadas automaticamente com base no dia de hoje.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resultados -->
+      <div class="card">
+        <h2>Resultados</h2>
+        <div class="field"><label>Valor entrada (R$)</label><input id="valorEntrada" readonly /></div>
+        <div class="field"><label>% Valor financiado (%)</label><input id="percFinanciado" readonly /></div>
+        <div class="field"><label>Valor financiado (R$)</label><input id="valorFinanciado" readonly /></div>
+        <div class="field"><label>Valor Parcela Mensal (R$/mês)</label><input id="parcelaMensal" readonly /></div>
+        <div class="field so-interno" style="display:none"><label>Valor de emissão da CCB (R$)</label><input id="valorEmissaoCCB" readonly /></div>
+        <div class="field so-interno" style="display:none"><label>IOF + tarifa de emissão (R$)</label><input id="custoEmissao" readonly /></div>
+        <div class="field"><label>Equalização de Taxa (%)</label><input id="equalizacaoPerc" readonly /></div>
+        <div class="field"><label>Valor Subsidiado (R$)</label><input id="valorSubsidiado" readonly /></div>
+        <div class="field"><label>Valor Financiado líquido de Equalização (R$)</label><div id="valorLiquido">R$ 0,00</div></div>
+        <div class="field"><label>Valor Total Recebido (R$)</label><div id="valorTotalRecebido">R$ 0,00</div></div>
+      </div>
+
+      <!-- Resumo -->
+      <div class="card" style="grid-column: 1 / -1;">
+        <h2>Resumo</h2>
+        <div id="resumoFin" class="help">Preencha os campos para ver o resumo do financiamento.</div>
+      </div>
+
+      <!-- Histórico -->
+      <div class="card" style="grid-column: 1 / -1;" id="histCard">
+        <h2>Histórico de Cálculos</h2>
+        <div id="histList" class="help">Nenhum cálculo salvo ainda.</div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+          <button id="limparHistorico">Limpar histórico</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <button id="copiar">Copiar resultados</button>
+      <button id="enviarWhatsapp">Enviar para Naval via WhatsApp</button>
+      <button id="limpar" class="primary">Limpar</button>
+    </div>
+  </div>
+
+  <script>
+// ===== MODO INTERNO =====
+// Este arquivo serve as duas versões. Publicado como naval.html (ou com
+// ?interno=1 na URL) ele exibe os campos de uso interno da Naval; publicado
+// como index.html fica na versão do vendedor. É o MESMO arquivo nos dois
+// endereços — basta copiar, não existe código duplicado para manter em dia.
+const MODO_INTERNO = /naval/i.test(location.pathname)
+  || new URLSearchParams(location.search).has('interno');
+
+// ===== PREMISSAS DE CUSTO =====
+// IOF/Crédito — Decreto 6.306/2007 com a redação do Decreto 12.499/2025
+// (restabelecido pelo STF em 16/07/2025, ADC 96 / ADIs 7827 e 7839).
+// PF e PJ têm hoje a MESMA alíquota: 0,38% fixa + 0,0082% ao dia,
+// com a diária limitada a 365 dias por parcela de principal (teto ~3,38%).
+const IOF_ADICIONAL   = 0.0038;    // alíquota adicional, sobre o principal
+const IOF_DIARIO      = 0.000082;  // alíquota diária
+const IOF_DIAS_TETO   = 365;       // teto da diária, por parcela
+const DIAS_POR_MES    = 30;        // contagem de dias até cada vencimento
+
+// Tarifa de emissão da CCB
+const EMISSAO_PERC    = 0.0025;    // 0,25% sobre o valor de emissão (bruto da CCB)
+const EMISSAO_MINIMO  = 1000;      // piso absoluto, em R$
+
+// Taxas do Fundo
+const TAXA_FUNDO_PADRAO   = 0.0199;
+const TAXA_FUNDO_CAMPANHA = 0.0179; // Campanha SPBS 2026
+
+// Opções oferecidas ao operador (tudo é calculado, então a lista é livre)
+const TAXAS_COMERCIAIS = [0, 0.29, 0.39, 0.49, 0.59, 0.69, 0.79, 0.89, 0.99,
+                          1.09, 1.19, 1.29, 1.39, 1.49, 1.59, 1.69, 1.79, 1.89, 1.99];
+const PRAZOS = [6, 9, 10, 12, 15, 18, 20, 21, 24, 27, 30, 33, 36, 39, 40, 42];
+
+
+// === Matemática financeira ===
+function fatorParcela(i, n){ return i === 0 ? 1/n : i/(1 - Math.pow(1+i, -n)); }
+function fatorVP(i, n){      return i === 0 ? n   : (1 - Math.pow(1+i, -n))/i; }
+
+// Fração de IOF diário sobre o principal. Independe do tamanho da operação:
+// depende só do perfil de amortização (taxa e prazo).
+function fracIofDiario(i, n){
+  const p = fatorParcela(i, n);
+  let saldo = 1, acc = 0;
+  for (let k = 1; k <= n; k++){
+    const amort = p - saldo * i;
+    acc += amort * Math.min(DIAS_POR_MES * k, IOF_DIAS_TETO);
+    saldo -= amort;
+  }
+  return acc * IOF_DIARIO;
+}
+
+// IOF total (adicional + diário) como fração do principal.
+function fracIof(i, n){ return IOF_ADICIONAL + fracIofDiario(i, n); }
+
+function tarifaEmissao(bruto){ return Math.max(EMISSAO_PERC * bruto, EMISSAO_MINIMO); }
+
+// Núcleo do cálculo.
+//
+// Estrutura da operação:
+//   - O valor financiado é cotado ao cliente à taxa comercial repassada.
+//   - O IOF e a tarifa de emissão são financiados junto, mas sempre à taxa do
+//     Fundo, não à taxa comercial.
+//   - A CCB é emitida à taxa do Fundo, pelo valor presente de todas as
+//     parcelas descontadas a essa taxa.
+//   - IOF e tarifa incidem sobre esse valor de emissão e são deduzidos dele;
+//     o líquido é o que chega na NX Boats.
+//   - A equalização é a diferença entre o valor financiado e esse líquido.
+//
+// Como os custos entram na parcela já à taxa do Fundo, o líquido cai
+// exatamente no valor presente da parte comercial e o gross-up tem forma
+// fechada: não precisa iterar.
+function calcularOperacao(financiado, taxaCliente, prazo, taxaFundo){
+  if (!(financiado > 0) || !(prazo > 0)) return null;
+
+  const fatorCliente = fatorParcela(taxaCliente, prazo);
+  const fatorFundo = fatorParcela(taxaFundo, prazo);
+  const vpFundo = fatorVP(taxaFundo, prazo);
+  const fracIofCCB = fracIof(taxaFundo, prazo); // a CCB corre à taxa do Fundo
+
+  // Valor presente da parte comercial: é o que a NX recebe de fato.
+  const liquido = financiado * fatorCliente * vpFundo;
+
+  // CCB = líquido + IOF + tarifa, com IOF e tarifa sobre a própria CCB.
+  let valorEmissao = liquido / (1 - fracIofCCB - EMISSAO_PERC);
+  if (EMISSAO_PERC * valorEmissao < EMISSAO_MINIMO){
+    valorEmissao = (liquido + EMISSAO_MINIMO) / (1 - fracIofCCB);
+  }
+
+  const iof = valorEmissao * fracIofCCB;
+  const tarifa = tarifaEmissao(valorEmissao);
+  const custo = iof + tarifa;
+
+  // Parcela: parte comercial à taxa repassada, custos à taxa do Fundo.
+  const parcela = financiado * fatorCliente + custo * fatorFundo;
+  const equalizacao = financiado - liquido;
+
+  return {
+    valorEmissao,
+    iof,
+    tarifa,
+    custo,
+    parcela,
+    liquido,
+    equalizacao,
+    equalizacaoPerc: equalizacao / financiado,
+    totalPagoCliente: parcela * prazo
+  };
+}
+
+// === Utils ===
+const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const PCT = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 2 });
+function toNumberFromBRL(t){
+  if(!t) return 0;
+  let s=String(t).trim();
+  s=s.replace(/[^0-9,\.]/g,''); s=s.replace(/\./g,'');
+  if(s.includes(',')){ s=s.replace(/,([^,]*)$/, '.$1'); s=s.replace(/,/g,''); }
+  const v=parseFloat(s); return isNaN(v)?0:v;
+}
+function fmtBRL(n){ return BRL.format(n||0); }
+
+// === Elementos ===
+const el = (id)=>document.getElementById(id);
+const valorLancha = el('valorLancha');
+const valorEntradaManual = el('valorEntradaManual');
+const percEntrada = el('percEntrada');
+const taxaComercial = el('taxaComercial');
+const campanhaSPBS = el('campanhaSPBS');
+const campanhaRow = el('campanhaRow');
+const alertaTaxa = el('alertaTaxa');
+const taxaFundoLabel = el('taxaFundoLabel');
+const numParcelas = el('numParcelas');
+const valorEntrada = el('valorEntrada');
+const percFinanciado = el('percFinanciado');
+const valorFinanciado = el('valorFinanciado');
+const parcelaMensal = el('parcelaMensal');
+const valorEmissaoCCB = el('valorEmissaoCCB');
+const custoEmissao = el('custoEmissao');
+const equalizacaoPerc = el('equalizacaoPerc');
+const valorSubsidiado = el('valorSubsidiado');
+const valorLiquido = el('valorLiquido');
+const valorTotalRecebido = el('valorTotalRecebido');
+const resumoBox = el('resumoFin');
+const dataFabricacaoMinima = el('dataFabricacaoMinima');
+const dataFinalFinanciamento = el('dataFinalFinanciamento');
+const textoLanchaUsada = el('textoLanchaUsada');
+
+// Estado de edição para sincronização
+let lastEdited = 'percEntrada';
+
+// ===== Histórico local (cookies) =====
+function setCookie(name, value, days=365){
+  const d=new Date(); d.setTime(d.getTime()+days*24*60*60*1000);
+  document.cookie = `${name}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/`;
+}
+function getCookie(name){
+  return document.cookie.split('; ').reduce((a,c)=>{
+    const [k,...v]=c.split('=');
+    a[k]=decodeURIComponent(v.join('='));
+    return a;
+  },{})[name];
+}
+const COOKIE_HISTORY = 'nx_hist';
+const MAX_HISTORY = 20;
+
+function loadHistory(){
+  try { const raw = getCookie(COOKIE_HISTORY)||''; return raw? JSON.parse(raw): []; } catch(e){ return []; }
+}
+function saveHistory(arr){
+  try {
+    let json = JSON.stringify(arr);
+    while (json.length>3500 && arr.length>1){ arr.shift(); json = JSON.stringify(arr); }
+    setCookie(COOKIE_HISTORY, json);
+  } catch(e){}
+}
+function renderHistory(){
+  const wrap = document.getElementById('histList');
+  const hist = loadHistory();
+  if (!wrap) return;
+  if (!hist.length){ wrap.classList.add('help'); wrap.textContent='Nenhum cálculo salvo ainda.'; return; }
+  wrap.classList.remove('help');
+  wrap.innerHTML = hist.map(h=>{
+    const d = new Date(h.ts||Date.now()).toLocaleString('pt-BR');
+    return `<div class="hist-item"><time>${d}</time><div class="text">${(h.text||'').replace(/</g,'&lt;')}</div></div>`;
+  }).join('');
+}
+
+// ===== Informação sobre lanchas usadas =====
+function addYearsSafe(date, years){
+  const d = new Date(date);
+  const originalMonth = d.getMonth();
+  d.setFullYear(d.getFullYear() + years);
+
+  // Ajuste para datas como 29/02 em anos não bissextos
+  if (d.getMonth() !== originalMonth) {
+    d.setDate(0);
+  }
+
+  return d;
+}
+
+function addMonthsSafe(date, months){
+  const d = new Date(date);
+  const originalDay = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + months);
+
+  const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(originalDay, lastDay));
+
+  return d;
+}
+
+function fmtDateBR(date){
+  return date.toLocaleDateString('pt-BR');
+}
+
+function atualizarInfoLanchaUsada(){
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+
+  const dataMinimaFabricacao = addYearsSafe(hoje, -5);
+  const dataFinal = addMonthsSafe(hoje, 36);
+
+  dataFabricacaoMinima.textContent = fmtDateBR(dataMinimaFabricacao);
+  dataFinalFinanciamento.textContent = fmtDateBR(dataFinal);
+
+  textoLanchaUsada.innerHTML =
+    `Hoje, <strong>${fmtDateBR(hoje)}</strong>, é possível financiar lanchas usadas fabricadas a partir de ` +
+    `<strong>${fmtDateBR(dataMinimaFabricacao)}</strong>. ` +
+    `O prazo máximo é de <strong>36 parcelas</strong>, com término máximo em ` +
+    `<strong>${fmtDateBR(dataFinal)}</strong>, considerando a data de contratação de hoje.`;
+}
+
+// ===== Opções dos seletores =====
+function montarPrazos(){
+  const atual = numParcelas.value;
+  numParcelas.innerHTML = PRAZOS.map(p => `<option value="${p}">${p}</option>`).join('');
+  numParcelas.value = PRAZOS.includes(parseInt(atual,10)) ? atual : String(PRAZOS[0]);
+}
+
+// Com a campanha SPBS 2026 ligada, a taxa do Fundo cai para 1,79% a.m.
+// e a taxa repassada ao cliente não pode passar disso.
+function montarTaxas(){
+  const teto = campanhaSPBS.checked ? 1.79 : 1.99;
+  const anterior = parseFloat(taxaComercial.value);
+  const lista = TAXAS_COMERCIAIS.filter(t => t <= teto + 1e-9);
+  taxaComercial.innerHTML = lista
+    .map(t => `<option value="${t.toFixed(2)}">${t.toFixed(2).replace('.', ',')}%</option>`)
+    .join('');
+  const escolhida = Math.min(Number.isNaN(anterior) ? teto : anterior, teto);
+  taxaComercial.value = escolhida.toFixed(2);
+}
+
+// Sinaliza em vermelho a taxa comercial sempre que ela for mexida pelo toggle
+// da campanha. Sai do vermelho quando o operador escolhe uma taxa no dropdown.
+function marcarTaxaAlterada(ligado){
+  taxaComercial.classList.toggle('alerta', !!ligado);
+  alertaTaxa.classList.toggle('on', !!ligado);
+}
+
+// ===== Cálculo principal =====
+function limparResultados(){
+  parcelaMensal.value = '';
+  valorEmissaoCCB.value = '';
+  custoEmissao.value = '';
+  equalizacaoPerc.value = '';
+  valorSubsidiado.value = '';
+  valorLiquido.textContent = '—';
+  valorTotalRecebido.textContent = '—';
+  if (resumoBox) resumoBox.textContent = 'Preencha os campos para ver o resumo do financiamento.';
+}
+
+function recalc(){
+  const vl = toNumberFromBRL(valorLancha.value);
+  const pe = parseFloat(String(percEntrada.value).replace(',', '.')) || 0;
+  const veManual = toNumberFromBRL(valorEntradaManual.value);
+  const taxa = parseFloat(taxaComercial.value) / 100;
+  const prazo = parseInt(numParcelas.value,10);
+
+  const campanha = !!campanhaSPBS.checked;
+  const taxaFundo = campanha ? TAXA_FUNDO_CAMPANHA : TAXA_FUNDO_PADRAO;
+  campanhaRow.classList.toggle('on', campanha);
+  taxaFundoLabel.textContent = `${(taxaFundo*100).toFixed(2).replace('.', ',')}% a.m.`;
+
+  // Sincronização % <-> R$
+  let entradaR = 0;
+  if (vl > 0) {
+    if (lastEdited === 'valorEntrada' && veManual >= 0) {
+      entradaR = Math.min(veManual, vl);
+      const pct = (entradaR / vl) * 100;
+      if (!Number.isNaN(pct)) { percEntrada.value = pct.toFixed(2).replace('.', ','); }
+    } else {
+      const pct = Math.max(0, Math.min(100, pe));
+      entradaR = vl * (pct/100);
+      if (document.activeElement !== valorEntradaManual) {
+        valorEntradaManual.value = entradaR ? fmtBRL(entradaR) : '';
+      }
+    }
+  } else {
+    entradaR = 0;
+    if (document.activeElement !== valorEntradaManual) valorEntradaManual.value = '';
+  }
+
+  const percFin = vl > 0 ? Math.max(0, 100 - (entradaR / (vl||1)) * 100) : 0;
+  const financiadoR = Math.max(0, vl - entradaR);
+
+  valorEntrada.value = fmtBRL(entradaR);
+  percFinanciado.value = `${percFin.toFixed(2).replace('.', ',')}%`;
+  valorFinanciado.value = fmtBRL(financiadoR);
+
+  const r = calcularOperacao(financiadoR, taxa, prazo, taxaFundo);
+  if (!r) { limparResultados(); return; }
+
+  const liquido = r.liquido;
+  const totalRecebido = entradaR + liquido;
+
+  parcelaMensal.value = fmtBRL(r.parcela);
+  valorEmissaoCCB.value = fmtBRL(r.valorEmissao);
+  custoEmissao.value = fmtBRL(r.custo);
+  equalizacaoPerc.value = PCT.format(r.equalizacaoPerc);
+  valorSubsidiado.value = fmtBRL(r.equalizacao);
+  valorLiquido.textContent = fmtBRL(liquido);
+
+  const pctDelta = (vl > 0) ? ((totalRecebido - vl) / vl) : 0;
+  const pctLabel = new Intl.NumberFormat('pt-BR', { style:'percent', maximumFractionDigits: 2 }).format(pctDelta);
+  valorTotalRecebido.textContent = `${fmtBRL(totalRecebido)} (${pctLabel})`;
+
+  try {
+    const taxaLabel = `${(taxa*100).toFixed(2).replace('.', ',')}% a.m.`;
+    const entradaPct = (vl>0)?(entradaR/vl*100):0;
+    const linhaCampanha = campanha
+      ? `Campanha SPBS 2026 aplicada: taxa do Fundo de 1,79% a.m. (confirmar elegibilidade do casco). `
+      : '';
+    const resumo =
+      `A lancha custa ${fmtBRL(vl)}. ` +
+      `A entrada é ${fmtBRL(entradaR)} (${entradaPct.toFixed(2).replace('.', ',')}%) ` +
+      `e o saldo a financiar é ${fmtBRL(financiadoR)} (${percFin.toFixed(2).replace('.', ',')}%). ` +
+      linhaCampanha +
+      `O financiamento tem taxa comercial ${taxaLabel} ` +
+      `e será pago em ${prazo} parcelas de ${fmtBRL(r.parcela)}, ` +
+      `totalizando ${fmtBRL(r.totalPagoCliente)} pagos pelo cliente. ` +
+      (MODO_INTERNO
+        ? `A CCB é emitida por ${fmtBRL(r.valorEmissao)} à taxa do Fundo; IOF ${fmtBRL(r.iof)} e tarifa de emissão ${fmtBRL(r.tarifa)}. `
+        : '') +
+      `Com equalização de ${PCT.format(r.equalizacaoPerc)} (= ${fmtBRL(r.equalizacao)}), ` +
+      `a NX Boats recebe ${fmtBRL(totalRecebido)} (entrada + financiamento líquido de equalização).`;
+    resumoBox.textContent = resumo;
+  } catch(e){}
+}
+
+// === Interações ===
+valorLancha.addEventListener('input', () => {
+  const digits = String(valorLancha.value).replace(/\D/g, '');
+  if (!digits) { valorLancha.value = ''; recalc(); return; }
+  const num = parseFloat(digits) / 100;
+  valorLancha.value = BRL.format(num);
+  recalc();
+});
+valorLancha.addEventListener('blur', ()=>{
+  const raw=toNumberFromBRL(valorLancha.value);
+  valorLancha.value = raw?fmtBRL(raw):'';
+  if (toNumberFromBRL(valorEntradaManual.value)>0){ lastEdited='valorEntrada'; }
+  recalc();
+});
+
+valorEntradaManual.addEventListener('input', () => {
+  lastEdited = 'valorEntrada';
+  const digits = String(valorEntradaManual.value).replace(/\D/g, '');
+  if (!digits) { valorEntradaManual.value = ''; recalc(); return; }
+  const num = parseFloat(digits) / 100;
+  valorEntradaManual.value = BRL.format(num);
+  recalc();
+});
+valorEntradaManual.addEventListener('blur', ()=>{
+  lastEdited='valorEntrada';
+  const raw=toNumberFromBRL(valorEntradaManual.value);
+  valorEntradaManual.value = raw?fmtBRL(raw):'';
+  recalc();
+});
+
+percEntrada.addEventListener('input', ()=>{ lastEdited='percEntrada'; recalc(); });
+taxaComercial.addEventListener('change', ()=>{ marcarTaxaAlterada(false); recalc(); });
+campanhaSPBS.addEventListener('change', ()=>{ montarTaxas(); marcarTaxaAlterada(true); recalc(); });
+numParcelas.addEventListener('change', recalc);
+
+// Copiar resultados
+(document.getElementById('copiar')||{}).onclick = async () => {
+  const resumo = resumoBox?.textContent || '';
+  try { await navigator.clipboard.writeText(resumo); alert('Resumo copiado.'); }
+  catch(e){ alert('Não foi possível copiar automaticamente — selecione e copie manualmente.'); }
+};
+
+// Enviar via WhatsApp (Naval)
+(document.getElementById('enviarWhatsapp')||{}).onclick = async () => {
+  const resumo = resumoBox?.textContent || '';
+  try { await navigator.clipboard.writeText(resumo); } catch(e){}
+  const phone = '5511916631101';
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(resumo)}`;
+  window.open(url, '_blank');
+};
+
+// Limpar parâmetros
+(document.getElementById('limpar')||{}).onclick = ()=>{
+  valorLancha.value='';
+  valorEntradaManual.value='';
+  percEntrada.value='';
+  campanhaSPBS.checked=false;
+  montarTaxas();
+  taxaComercial.value='1.99';
+  marcarTaxaAlterada(false);
+  numParcelas.value='6';
+  lastEdited='percEntrada';
+  limparResultados();
+  recalc();
+  atualizarInfoLanchaUsada();
+};
+
+// Salvar cálculo (histórico)
+(document.getElementById('salvarResumo')||{}).onclick = ()=>{
+  const text = (resumoBox?.textContent||'').trim();
+  if (!text || /Preencha os campos/.test(text)) { alert('Preencha os parâmetros para gerar o resumo antes de salvar.'); return; }
+  const hist = loadHistory();
+  hist.push({ ts: Date.now(), text });
+  while (hist.length>MAX_HISTORY) hist.shift();
+  saveHistory(hist);
+  renderHistory();
+};
+
+// Limpar histórico
+(document.getElementById('limparHistorico')||{}).onclick = ()=>{
+  setCookie(COOKIE_HISTORY,'[]');
+  renderHistory();
+};
+
+// Logo + updates
+(function initUI(){
+  (document.getElementById('updatesClose')||{}).onclick = () => {
+    const box = document.getElementById('updatesBox');
+    if (box) box.style.display = 'none';
+  };
+})();
+
+// Inicializa
+if (MODO_INTERNO){
+  document.body.classList.add('interno');
+  document.querySelectorAll('.so-interno').forEach(e => { e.style.display = ''; });
+  document.title = 'NX Boats • Simulador (uso interno Naval)';
+}
+montarPrazos();
+montarTaxas();
+taxaComercial.value = '1.99';
+recalc();
+renderHistory();
+atualizarInfoLanchaUsada();
+  </script>
+</body>
+</html>
