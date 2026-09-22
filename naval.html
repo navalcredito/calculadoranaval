@@ -59,25 +59,54 @@
     }
     body.interno .badge-interno { display: inline-block; }
 
-    /* Campanha / toggle */
-    .switch-row {
-      display: flex; align-items: flex-start; gap: 10px;
-      padding: 11px 12px; margin: -4px 0 12px 0;
-      border-radius: 12px;
-      background: rgba(45,212,191,0.06);
-      border: 1px solid rgba(45,212,191,0.22);
+    /* Campanha SPBS — card com interruptor */
+    .campanha {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px; margin: 2px 0 14px 0;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.045);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-left: 4px solid rgba(255,255,255,0.28);
       cursor: pointer;
+      transition: background .18s, border-color .18s, box-shadow .18s;
     }
-    .switch-row input[type="checkbox"] {
-      width: 18px; height: 18px; min-width: 18px; padding: 0; margin: 1px 0 0 0;
-      accent-color: var(--accent); cursor: pointer; border-radius: 4px;
+    .campanha:hover { background: rgba(255,255,255,0.075); }
+    .campanha.on {
+      background: rgba(45,212,191,0.12);
+      border-color: rgba(45,212,191,0.50);
+      border-left-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(45,212,191,0.18);
     }
-    .switch-row .sw-text { font-size: 13px; line-height: 1.35; }
-    .switch-row .sw-text small { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
-    .switch-row.on { background: rgba(45,212,191,0.13); border-color: rgba(45,212,191,0.45); }
+    .campanha-txt { flex: 1 1 auto; min-width: 0; }
+    .campanha-titulo { display: block; font-size: 15px; font-weight: 700; letter-spacing: .1px; }
+    .campanha-estado { display: block; font-size: 13px; margin-top: 4px; color: var(--muted); }
+    .campanha.on .campanha-estado { color: var(--accent); }
+    .campanha-estado strong { font-weight: 700; }
+    .campanha-hint { display: block; font-size: 11.5px; color: var(--muted); margin-top: 5px; line-height: 1.35; }
 
-    .taxa-fundo-note { font-size: 12px; color: var(--muted); margin: -6px 0 12px 2px; }
-    .taxa-fundo-note strong { color: var(--accent); }
+    /* interruptor */
+    .switch-input {
+      appearance: none; -webkit-appearance: none;
+      flex: 0 0 auto; width: 54px; height: 31px; min-width: 54px;
+      padding: 0; margin: 0; border-radius: 999px; cursor: pointer;
+      background: rgba(255,255,255,0.16);
+      border: 1px solid rgba(255,255,255,0.28);
+      position: relative;
+      transition: background .18s, border-color .18s;
+    }
+    .switch-input::after {
+      content: ''; position: absolute; top: 3px; left: 3px;
+      width: 23px; height: 23px; border-radius: 50%;
+      background: #fff; transition: transform .18s;
+    }
+    .switch-input:checked { background: var(--accent); border-color: var(--accent); }
+    .switch-input:checked::after { transform: translateX(23px); }
+    @keyframes pulsoSwitch {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(45,212,191,0); }
+      50%      { box-shadow: 0 0 0 7px rgba(45,212,191,0.15); }
+    }
+    .campanha:not(.on) .switch-input { animation: pulsoSwitch 2.4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) { .campanha:not(.on) .switch-input { animation: none; } }
 
     /* Taxa comercial alterada pelo toggle da campanha: sinaliza em vermelho
        até o operador confirmar escolhendo uma taxa no dropdown. */
@@ -205,15 +234,14 @@
 
         <p class="alerta-taxa" id="alertaTaxa">A taxa comercial mudou com a campanha. Confira antes de passar as condições.</p>
 
-        <label class="switch-row" id="campanhaRow" for="campanhaSPBS">
-          <input type="checkbox" id="campanhaSPBS" />
-          <span class="sw-text">
-            Campanha SPBS 2026 — taxa do Fundo a 1,79% a.m.
-            <small>Confirme com a NX Boats a elegibilidade da operação.</small>
+        <label class="campanha" id="campanhaRow" for="campanhaSPBS">
+          <span class="campanha-txt">
+            <span class="campanha-titulo">Campanha SPBS 2026</span>
+            <span class="campanha-estado" id="campanhaEstado">Desativada &middot; taxa do Fundo <strong>1,99% a.m.</strong></span>
+            <span class="campanha-hint" id="campanhaHint">Ative para baixar a taxa do Fundo para 1,79% a.m.</span>
           </span>
+          <input type="checkbox" class="switch-input" id="campanhaSPBS" role="switch" aria-label="Ativar Campanha SPBS 2026" />
         </label>
-
-        <div class="taxa-fundo-note">Taxa do Fundo aplicada nesta simulação: <strong id="taxaFundoLabel">1,99% a.m.</strong></div>
 
         <div class="field">
           <label for="numParcelas">Número de Parcelas (meses)</label>
@@ -417,7 +445,8 @@ const taxaComercial = el('taxaComercial');
 const campanhaSPBS = el('campanhaSPBS');
 const campanhaRow = el('campanhaRow');
 const alertaTaxa = el('alertaTaxa');
-const taxaFundoLabel = el('taxaFundoLabel');
+const campanhaEstado = el('campanhaEstado');
+const campanhaHint = el('campanhaHint');
 const numParcelas = el('numParcelas');
 const valorEntrada = el('valorEntrada');
 const percFinanciado = el('percFinanciado');
@@ -570,7 +599,12 @@ function recalc(){
   const campanha = !!campanhaSPBS.checked;
   const taxaFundo = campanha ? TAXA_FUNDO_CAMPANHA : TAXA_FUNDO_PADRAO;
   campanhaRow.classList.toggle('on', campanha);
-  taxaFundoLabel.textContent = `${(taxaFundo*100).toFixed(2).replace('.', ',')}% a.m.`;
+  campanhaEstado.innerHTML = (campanha ? 'Ativada' : 'Desativada')
+    + ' &middot; taxa do Fundo <strong id="taxaFundoLabel">'
+    + `${(taxaFundo*100).toFixed(2).replace('.', ',')}% a.m.` + '</strong>';
+  campanhaHint.textContent = campanha
+    ? 'Confirme a elegibilidade da operação com a NX Boats.'
+    : 'Ative para baixar a taxa do Fundo para 1,79% a.m.';
 
   // Sincronização % <-> R$
   let entradaR = 0;
