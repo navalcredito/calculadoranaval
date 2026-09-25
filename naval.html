@@ -68,16 +68,15 @@
     button.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; color: #fff; }
     .help { color: var(--muted); font-size: 12px; }
     .destaque {
-      margin: 4px 0 16px 0; padding: 14px 16px;
-      border-radius: 14px;
+      margin: 2px 0 12px 0; padding: 10px 12px;
+      border-radius: 12px;
       background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.16);
     }
-    .destaque-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; font-weight: 600; }
-    .destaque-valor { font-size: 38px; font-weight: 700; line-height: 1.1; margin-top: 4px; letter-spacing: -.5px; }
-    .destaque-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
-    .field.secundario label { font-size: 11px; }
-    .field.secundario input { font-size: 14px; padding: 8px 10px; opacity: .85; }
+    .destaque-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+    .destaque-valor { font-size: 24px; font-weight: 700; line-height: 1.2; margin-top: 2px; letter-spacing: -.3px; }
+    .destaque-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .destaque-pct { font-size: 16px; font-weight: 600; color: var(--muted); white-space: nowrap; }
     .versao { text-align: right; color: var(--muted); font-size: 11px; margin: 10px 2px 24px 0; }
     .badge-interno {
       display: none; margin-right: 10px; padding: 3px 9px; border-radius: 999px;
@@ -281,18 +280,30 @@
         <div class="field"><label>Valor entrada (R$)</label><input id="valorEntrada" readonly /></div>
         <div class="field"><label>% Valor financiado (%)</label><input id="percFinanciado" readonly /></div>
         <div class="field"><label>Valor financiado (R$)</label><input id="valorFinanciado" readonly /></div>
-        <div class="field"><label>Valor Parcela Mensal (R$/mês)</label><input id="parcelaMensal" readonly /></div>
-        <div class="destaque" id="destaqueDesconto">
+
+        <div class="destaque">
+          <div class="destaque-label">Valor da parcela mensal</div>
+          <div class="destaque-valor" id="parcelaMensal">—</div>
+          <div class="destaque-sub" id="parcelaSub">&nbsp;</div>
+        </div>
+
+        <div class="destaque">
           <div class="destaque-label">Equalização sobre o valor da lancha</div>
           <div class="destaque-valor" id="descontoLanchaPerc">—</div>
           <div class="destaque-sub" id="descontoLanchaSub">Preencha os parâmetros</div>
         </div>
+
         <div class="field so-interno" style="display:none"><label>Valor de emissão da CCB (R$)</label><input id="valorEmissaoCCB" readonly /></div>
         <div class="field so-interno" style="display:none"><label>IOF + tarifa de emissão (R$)</label><input id="custoEmissao" readonly /></div>
-        <div class="field secundario"><label>Equalização (% sobre o valor financiado)</label><input id="equalizacaoPerc" readonly /></div>
+        <div class="field so-interno" style="display:none"><label>Equalização (% sobre o valor financiado)</label><input id="equalizacaoPerc" readonly /></div>
         <div class="field"><label>Valor Subsidiado (R$)</label><input id="valorSubsidiado" readonly /></div>
         <div class="field"><label>Valor Financiado líquido de Equalização (R$)</label><div id="valorLiquido">R$ 0,00</div></div>
-        <div class="field"><label>Valor Total Recebido (R$)</label><div id="valorTotalRecebido">R$ 0,00</div></div>
+
+        <div class="destaque">
+          <div class="destaque-label">Valor total recebido</div>
+          <div class="destaque-valor" id="valorTotalRecebido">—</div>
+          <div class="destaque-sub">Entrada + financiamento líquido de equalização</div>
+        </div>
       </div>
 
       <!-- Resumo -->
@@ -481,6 +492,7 @@ const valorEntrada = el('valorEntrada');
 const percFinanciado = el('percFinanciado');
 const valorFinanciado = el('valorFinanciado');
 const parcelaMensal = el('parcelaMensal');
+const parcelaSub = el('parcelaSub');
 const valorEmissaoCCB = el('valorEmissaoCCB');
 const custoEmissao = el('custoEmissao');
 const equalizacaoPerc = el('equalizacaoPerc');
@@ -610,7 +622,8 @@ function marcarTaxaAlterada(ligado){
 
 // ===== Cálculo principal =====
 function limparResultados(){
-  parcelaMensal.value = '';
+  parcelaMensal.textContent = '—';
+  parcelaSub.innerHTML = '&nbsp;';
   valorEmissaoCCB.value = '';
   custoEmissao.value = '';
   equalizacaoPerc.value = '';
@@ -674,7 +687,8 @@ function recalc(){
   const liquido = r.liquido;
   const totalRecebido = entradaR + liquido;
 
-  parcelaMensal.value = fmtBRL(r.parcela);
+  parcelaMensal.textContent = fmtBRL(r.parcela);
+  parcelaSub.textContent = `${prazo}x · total pago pelo cliente ${fmtBRL(r.totalPagoCliente)}`;
   valorEmissaoCCB.value = fmtBRL(r.valorEmissao);
   custoEmissao.value = fmtBRL(r.custo);
   equalizacaoPerc.value = PCT.format(r.equalizacaoPerc);
@@ -687,7 +701,7 @@ function recalc(){
   descontoLanchaSub.textContent = (r.equalizacao > 0.005)
     ? `${fmtBRL(r.equalizacao)} de subsídio da NX Boats sobre ${fmtBRL(vl)}`
     : 'Sem subsídio da NX Boats';
-  valorTotalRecebido.textContent = `${fmtBRL(totalRecebido)} (${PCT.format(descontoLancha > 0.00005 ? -descontoLancha : 0)})`;
+  valorTotalRecebido.innerHTML = `${fmtBRL(totalRecebido)} <span class="destaque-pct">(${PCT.format(descontoLancha > 0.00005 ? -descontoLancha : 0)})</span>`;
 
   try {
     const taxaLabel = `${(taxa*100).toFixed(2).replace('.', ',')}% a.m.`;
