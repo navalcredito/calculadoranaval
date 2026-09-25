@@ -67,6 +67,17 @@
     button { cursor: pointer; border-radius: 12px; padding: 10px 14px; font-weight: 600; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.08); color: var(--text); }
     button.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: none; color: #fff; }
     .help { color: var(--muted); font-size: 12px; }
+    .destaque {
+      margin: 4px 0 16px 0; padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+    .destaque-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; font-weight: 600; }
+    .destaque-valor { font-size: 38px; font-weight: 700; line-height: 1.1; margin-top: 4px; letter-spacing: -.5px; }
+    .destaque-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .field.secundario label { font-size: 11px; }
+    .field.secundario input { font-size: 14px; padding: 8px 10px; opacity: .85; }
     .versao { text-align: right; color: var(--muted); font-size: 11px; margin: 10px 2px 24px 0; }
     .badge-interno {
       display: none; margin-right: 10px; padding: 3px 9px; border-radius: 999px;
@@ -247,7 +258,7 @@
         <label class="campanha" id="campanhaRow" for="campanhaSPBS">
           <span class="campanha-txt">
             <span class="campanha-titulo">Campanha SPBS 2026</span>
-            <span class="campanha-estado" id="campanhaEstado">Desativada &middot; taxa do Fundo <strong>1,99% a.m.</strong></span>
+            <span class="campanha-estado" id="campanhaEstado"><span id="campanhaStatus">Desativada</span> &middot; taxa do Fundo <strong id="taxaFundoLabel">1,99% a.m.</strong></span>
             <span class="campanha-hint" id="campanhaHint">Ative para baixar a taxa do Fundo para 1,79% a.m.</span>
           </span>
           <input type="checkbox" class="switch-input" id="campanhaSPBS" role="switch" aria-label="Ativar Campanha SPBS 2026" />
@@ -271,9 +282,14 @@
         <div class="field"><label>% Valor financiado (%)</label><input id="percFinanciado" readonly /></div>
         <div class="field"><label>Valor financiado (R$)</label><input id="valorFinanciado" readonly /></div>
         <div class="field"><label>Valor Parcela Mensal (R$/mês)</label><input id="parcelaMensal" readonly /></div>
+        <div class="destaque" id="destaqueDesconto">
+          <div class="destaque-label">Equalização sobre o valor da lancha</div>
+          <div class="destaque-valor" id="descontoLanchaPerc">—</div>
+          <div class="destaque-sub" id="descontoLanchaSub">Preencha os parâmetros</div>
+        </div>
         <div class="field so-interno" style="display:none"><label>Valor de emissão da CCB (R$)</label><input id="valorEmissaoCCB" readonly /></div>
         <div class="field so-interno" style="display:none"><label>IOF + tarifa de emissão (R$)</label><input id="custoEmissao" readonly /></div>
-        <div class="field"><label>Equalização de Taxa (%)</label><input id="equalizacaoPerc" readonly /></div>
+        <div class="field secundario"><label>Equalização (% sobre o valor financiado)</label><input id="equalizacaoPerc" readonly /></div>
         <div class="field"><label>Valor Subsidiado (R$)</label><input id="valorSubsidiado" readonly /></div>
         <div class="field"><label>Valor Financiado líquido de Equalização (R$)</label><div id="valorLiquido">R$ 0,00</div></div>
         <div class="field"><label>Valor Total Recebido (R$)</label><div id="valorTotalRecebido">R$ 0,00</div></div>
@@ -437,7 +453,7 @@ function calcularOperacao(financiado, taxaCliente, prazo, taxaFundo){
 
 // === Utils ===
 const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-const PCT = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 2 });
+const PCT = new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 function toNumberFromBRL(t){
   if(!t) return 0;
   let s=String(t).trim();
@@ -457,6 +473,8 @@ const campanhaSPBS = el('campanhaSPBS');
 const campanhaRow = el('campanhaRow');
 const alertaTaxa = el('alertaTaxa');
 const campanhaEstado = el('campanhaEstado');
+const campanhaStatus = el('campanhaStatus');
+const taxaFundoLabel = el('taxaFundoLabel');
 const campanhaHint = el('campanhaHint');
 const numParcelas = el('numParcelas');
 const valorEntrada = el('valorEntrada');
@@ -469,6 +487,8 @@ const equalizacaoPerc = el('equalizacaoPerc');
 const valorSubsidiado = el('valorSubsidiado');
 const valorLiquido = el('valorLiquido');
 const valorTotalRecebido = el('valorTotalRecebido');
+const descontoLanchaPerc = el('descontoLanchaPerc');
+const descontoLanchaSub = el('descontoLanchaSub');
 const resumoBox = el('resumoFin');
 const dataFabricacaoMinima = el('dataFabricacaoMinima');
 const dataFinalFinanciamento = el('dataFinalFinanciamento');
@@ -597,6 +617,8 @@ function limparResultados(){
   valorSubsidiado.value = '';
   valorLiquido.textContent = '—';
   valorTotalRecebido.textContent = '—';
+  descontoLanchaPerc.textContent = '—';
+  descontoLanchaSub.textContent = 'Preencha os parâmetros';
   if (resumoBox) resumoBox.textContent = 'Preencha os campos para ver o resumo do financiamento.';
 }
 
@@ -610,12 +632,15 @@ function recalc(){
   const campanha = !!campanhaSPBS.checked;
   const taxaFundo = campanha ? TAXA_FUNDO_CAMPANHA : TAXA_FUNDO_PADRAO;
   campanhaRow.classList.toggle('on', campanha);
-  campanhaEstado.innerHTML = (campanha ? 'Ativada' : 'Desativada')
-    + ' &middot; taxa do Fundo <strong id="taxaFundoLabel">'
-    + `${(taxaFundo*100).toFixed(2).replace('.', ',')}% a.m.` + '</strong>';
-  campanhaHint.textContent = campanha
+  // Só escreve no cartão quando o texto muda. Reescrever os nós a cada
+  // recálculo quebrava o toque: se o vendedor saía de um campo tocando no
+  // cartão, o blur recalculava, trocava o nó sob o dedo e o clique se perdia.
+  const setTxt = (e, t) => { if (e.textContent !== t) e.textContent = t; };
+  setTxt(campanhaStatus, campanha ? 'Ativada' : 'Desativada');
+  setTxt(taxaFundoLabel, `${(taxaFundo*100).toFixed(2).replace('.', ',')}% a.m.`);
+  setTxt(campanhaHint, campanha
     ? 'Confirme a elegibilidade da operação com a NX Boats.'
-    : 'Ative para baixar a taxa do Fundo para 1,79% a.m.';
+    : 'Ative para baixar a taxa do Fundo para 1,79% a.m.');
 
   // Sincronização % <-> R$
   let entradaR = 0;
@@ -656,9 +681,13 @@ function recalc(){
   valorSubsidiado.value = fmtBRL(r.equalizacao);
   valorLiquido.textContent = fmtBRL(liquido);
 
-  const pctDelta = (vl > 0) ? ((totalRecebido - vl) / vl) : 0;
-  const pctLabel = new Intl.NumberFormat('pt-BR', { style:'percent', maximumFractionDigits: 2 }).format(pctDelta);
-  valorTotalRecebido.textContent = `${fmtBRL(totalRecebido)} (${pctLabel})`;
+  // Equalização sobre a lancha: é o número que o vendedor usa para negociar.
+  const descontoLancha = (vl > 0) ? (r.equalizacao / vl) : 0;
+  descontoLanchaPerc.textContent = PCT.format(descontoLancha);
+  descontoLanchaSub.textContent = (r.equalizacao > 0.005)
+    ? `${fmtBRL(r.equalizacao)} de subsídio da NX Boats sobre ${fmtBRL(vl)}`
+    : 'Sem subsídio da NX Boats';
+  valorTotalRecebido.textContent = `${fmtBRL(totalRecebido)} (${PCT.format(descontoLancha > 0.00005 ? -descontoLancha : 0)})`;
 
   try {
     const taxaLabel = `${(taxa*100).toFixed(2).replace('.', ',')}% a.m.`;
@@ -677,8 +706,9 @@ function recalc(){
       (MODO_INTERNO
         ? `A CCB é emitida por ${fmtBRL(r.valorEmissao)} à taxa do Fundo; IOF ${fmtBRL(r.iof)} e tarifa de emissão ${fmtBRL(r.tarifa)}. `
         : '') +
-      `Com equalização de ${PCT.format(r.equalizacaoPerc)} (= ${fmtBRL(r.equalizacao)}), ` +
-      `a NX Boats recebe ${fmtBRL(totalRecebido)} (entrada + financiamento líquido de equalização).`;
+      `A equalização sobre o valor da lancha é de ${PCT.format(descontoLancha)} (${fmtBRL(r.equalizacao)} de subsídio da NX Boats, ` +
+      `equivalente a ${PCT.format(r.equalizacaoPerc)} do valor financiado). ` +
+      `A NX Boats recebe ${fmtBRL(totalRecebido)} (entrada + financiamento líquido de equalização).`;
     resumoBox.textContent = resumo;
   } catch(e){}
 }

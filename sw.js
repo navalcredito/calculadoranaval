@@ -1,7 +1,7 @@
 // Service worker da Calculadora FIDC NX Boats.
 // Guarda o app inteiro no aparelho para funcionar sem internet, inclusive
 // depois de recarregar a página. Troque a VERSAO a cada publicação.
-const VERSAO = 'fidc-nx-v2.3.0';
+const VERSAO = 'fidc-nx-v2.4.2';
 
 const ARQUIVOS = [
   './',
